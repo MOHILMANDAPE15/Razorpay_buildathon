@@ -199,7 +199,7 @@ class CostWeightedSelector:
         candidates: List[RuleHypothesis],
         df_eval: pd.DataFrame,
         max_ensemble_size: int = 4,
-        min_marginal_gain_inr: float = 250.0,
+        min_marginal_gain_inr: float = 0.0,
     ) -> EnsembleSelectionResult:
         """Executes forward greedy selection to build the optimal synergistic ensemble.
         

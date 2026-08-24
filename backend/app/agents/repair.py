@@ -33,14 +33,17 @@ def _extract_code_from_response(text: str) -> Tuple[str, str]:
             pass
 
     # Attempt 3: Extract python code from ```python ... ``` fences
-    code_match = re.search(r"```(?:python)?\s*(def predict\(.*?\))\s*```", text, re.DOTALL)
+    code_match = re.search(r"```(?:python)?\s*(def predict[\s\S]*?)(?:```|\Z)", text)
     if code_match:
-        return code_match.group(1), "Extracted from Python code block"
+        return code_match.group(1).strip(), "Extracted from Python code block"
 
     # Attempt 4: Search for def predict
     if "def predict(" in text:
         start_idx = text.find("def predict(")
-        return text[start_idx:].strip(), "Extracted from raw text"
+        code_text = text[start_idx:].strip()
+        if "```" in code_text:
+            code_text = code_text[:code_text.find("```")].strip()
+        return code_text, "Extracted from raw text"
 
     return text.strip(), "Raw response"
 

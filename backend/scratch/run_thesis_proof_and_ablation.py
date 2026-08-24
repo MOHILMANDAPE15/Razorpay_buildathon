@@ -49,7 +49,7 @@ def run_section_4_7_live_proof():
     print("=" * 70)
 
     # 1. Generate live frozen snapshot via LLM evolution on train
-    snapshot = generate_frozen_rule_snapshot(live=True, n_rounds=2)
+    snapshot = generate_frozen_rule_snapshot(live=True, n_rounds=3, hypotheses_per_round=3)
 
     # 2. Load frozen ensemble and evaluate on validation (drift exposure)
     print("\n" + "=" * 70)

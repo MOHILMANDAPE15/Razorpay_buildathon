@@ -69,6 +69,11 @@ FINANCIAL COST MODEL TO MAXIMIZE NET SAVINGS:
 - Wrongly blocking a genuine order burns 15% of its order value (blocking a ₹5,000 order loses ₹750!).
 - To achieve high positive Net Financial Savings (₹), rules MUST be high-precision (combine multiple specific risk signals, e.g. COD mode + high pincode RTO rate + first-time buyer, and avoid over-blocking expensive orders without strong evidence).
 
+RULE COMPLEXITY & COVERAGE GUIDELINES:
+- An ideal fraud rule combines 2 to 3 synergistic signals (e.g. `(df['payment_mode'] == 'COD') & (df['pincode_rolling_rto_rate'] > 0.30) & (df['customer_prior_orders'] == 0)` or `(df['device_order_count_24h'] >= 3) & (df['promo_code_used'] == True)`).
+- Aim for balanced coverage: A viable rule should flag 50 to 800 orders (1% to 15% recall) with 35%–65% precision.
+- Avoid ultra-narrow rules with 5+ strict AND conditions that match fewer than 10 orders.
+
 OUTPUT FORMAT:
 You must respond with valid JSON adhering to this exact schema:
 {{
@@ -89,7 +94,8 @@ Your job is to analyze why a fraud detection rule failed on real ground-truth va
 FINANCIAL COST TRADEOFF TO KEEP IN MIND:
 - Catching an RTO fraud saves ₹250 in logistics and restocking loss.
 - Wrongly blocking a genuine customer costs 15% of their order value in lost gross profit and customer insult friction. (Blocking a ₹10,000 genuine order burns ₹1,500!).
-- Therefore, rules must NOT over-block legitimate high-value orders simply due to weak generic signals.
+- If the parent rule flagged very few orders (recall < 1%), RELAX the most restrictive condition (e.g. lower threshold from >0.5 to >0.35, or remove an unnecessary 4th condition).
+- If the parent rule had too many false alarms, ADD a discriminating condition (e.g. require COD mode, low prior orders, or high pincode risk).
 
 OUTPUT FORMAT:
 You must respond with valid JSON adhering to this exact schema:

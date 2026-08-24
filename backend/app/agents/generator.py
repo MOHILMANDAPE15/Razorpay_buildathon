@@ -145,8 +145,38 @@ Respond with a JSON array containing {n_hypotheses} rule objects.
         array_match = re.search(r"\[\s*\{.*\}\s*\]", text, re.DOTALL)
         if array_match:
             try:
-                return json.loads(array_match.group(0))
+                data = json.loads(array_match.group(0))
+                if isinstance(data, list):
+                    return data
             except Exception:
                 pass
+
+        # 4. Fallback: extract individual JSON objects
+        obj_matches = re.finditer(r"\{[\s\S]*?\}", text)
+        results = []
+        for om in obj_matches:
+            try:
+                obj = json.loads(om.group(0))
+                if isinstance(obj, dict) and ("code" in obj or "name" in obj):
+                    results.append(obj)
+            except Exception:
+                continue
+        if results:
+            return results
+
+        # 5. Fallback: extract any python def predict(df) functions directly
+        func_matches = re.findall(r"(def predict\s*\([^)]*\):[\s\S]*?)(?=(?:def predict|\Z))", text)
+        if func_matches:
+            for idx, func in enumerate(func_matches):
+                cleaned = re.sub(r"```.*", "", func).strip()
+                if cleaned:
+                    results.append({
+                        "name": f"Generated Rule {idx+1}",
+                        "code": cleaned,
+                        "description": "Extracted rule function",
+                        "rationale": "Direct rule extraction",
+                        "target_signal": "general_risk",
+                    })
+            return results
 
         return []

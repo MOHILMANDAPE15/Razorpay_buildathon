@@ -113,19 +113,22 @@ DIAGNOSIS & MUTATION TASK:
         parsed_data = self._parse_json_response(raw_content)
         if not parsed_data:
             # Fallback: extract code directly from raw text
-            code_match = re.search(r"```(?:python)?\s*(def predict\(.*?\))\s*```", raw_content, re.DOTALL)
+            code_match = re.search(r"```(?:python)?\s*(def predict[\s\S]*?)(?:```|\Z)", raw_content)
             if code_match:
                 parsed_data = {
                     "mutated_rule_name": f"Mutated {parent_hypothesis.name}",
-                    "mutated_code": code_match.group(1),
+                    "mutated_code": code_match.group(1).strip(),
                     "diagnosis": "Direct code extraction",
                     "mutation_strategy": "Direct code mutation",
                 }
             elif "def predict(" in raw_content:
                 start_idx = raw_content.find("def predict(")
+                code_text = raw_content[start_idx:].strip()
+                if "```" in code_text:
+                    code_text = code_text[:code_text.find("```")].strip()
                 parsed_data = {
                     "mutated_rule_name": f"Mutated {parent_hypothesis.name}",
-                    "mutated_code": raw_content[start_idx:].strip(),
+                    "mutated_code": code_text,
                     "diagnosis": "Direct code extraction",
                     "mutation_strategy": "Direct code mutation",
                 }

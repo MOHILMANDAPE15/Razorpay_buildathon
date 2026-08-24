@@ -4,28 +4,30 @@
   "section": "4.7 Frozen Rule Ensemble",
   "training_data": "orders_train (10,807 orders, Days 0-55) -- pre-drift only",
   "generation_mode": "live_llm",
-  "n_rounds": 2,
-  "hypotheses_evaluated": 7,
+  "n_rounds": 3,
+  "hypotheses_evaluated": 14,
   "selected_rules": [
     {
-      "id": "hyp_r2_1_a4b5",
-      "name": "High\u2011Value COD in Extreme\u2011RTO Pincodes",
-      "code": "def predict(df):\n    return (\n        (df['payment_mode'] == 'COD') &\n        (df['pincode_rolling_rto_rate'] >= 0.60) &\n        (df['order_value'] >= 4000)\n    )",
-      "description": "Flags large\u2011value COD orders placed in pincodes whose historic RTO rate is exceptionally high.",
-      "rationale": "A pincode with a rolling RTO rate above 60\u202f% already indicates delivery\u2011failure propensity. When the merchant also ships a costly COD order (\u2265\u202f\u20b94\u202f000), the expected loss per fraud (\u20b9250) is dwarfed by the potential logistics and restocking cost, making this a high\u2011impact fraud slice with a low false\u2011positive likelihood.",
-      "target_signal": "pincode_risk_high_value_cod",
+      "id": "hyp_r2_mut_5966",
+      "name": "High\u2011Value COD RTO Risk with Flexible Timing & Promo",
+      "code": "import pandas as pd\n\ndef predict(df: pd.DataFrame):\n    # Block only COD orders with significant value\n    # and either a promo code or a very high pincode RTO risk.\n    return (\n        (df['payment_mode'] == 'COD') &\n        (df['order_value'] > 4000) &\n        ((df['promo_code_used']) | (df['pincode_rolling_rto_rate'] > 0.6))\n    )",
+      "description": "Mutated from hyp_r2_3_ad5f. Strategy: 1. Remove the strict order_hour <=4 requirement.\n2. Replace the single promo requirement with a conditional: block if (p",
+      "rationale": "Diagnosis: The parent rule was too restrictive and overly specific: it required COD, an early\u2011morning hour (<=4), a high pincode RTO rate (>0.4), and the use of a promo code. This combination missed the vast maj | Strategy: 1. Remove the strict order_hour <=4 requirement.\n2. Replace the single promo requirement with a conditional: block if (promo used) OR (pincode risk > 0.6).\n3. Add an order_value > 4000 filter to exclu",
+      "target_signal": "night_rto_promo",
       "generation_round": 2,
-      "parent_ids": [],
+      "parent_ids": [
+        "hyp_r2_3_ad5f"
+      ],
       "status": "champion"
     }
   ],
   "ensemble_size": 1,
-  "pruned_count": 6,
+  "pruned_count": 13,
   "performance_train_pre_drift": {
     "total_orders": 10807,
-    "precision": 1.0,
-    "recall": 0.0008,
-    "f1_score": 0.0015,
-    "net_financial_savings_inr": 500.0
+    "precision": 0.3765,
+    "recall": 0.0247,
+    "f1_score": 0.0464,
+    "net_financial_savings_inr": -76288.01
   }
 }
