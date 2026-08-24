@@ -14,6 +14,10 @@ from app.agents.prompts import REPAIR_SYSTEM_PROMPT
 
 def _extract_code_from_response(text: str) -> Tuple[str, str]:
     """Extracts python code and explanation from JSON or markdown code blocks."""
+    # Remove Qwen/DeepSeek thinking blocks if present
+    if "<think>" in text and "</think>" in text:
+        text = text.split("</think>", 1)[1].strip()
+
     # Sanitize unicode
     text = (
         text.replace("\u2011", "-")

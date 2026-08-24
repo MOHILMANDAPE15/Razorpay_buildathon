@@ -5,29 +5,38 @@
   "training_data": "orders_train (10,807 orders, Days 0-55) -- pre-drift only",
   "generation_mode": "live_llm",
   "n_rounds": 3,
-  "hypotheses_evaluated": 14,
+  "hypotheses_evaluated": 3,
   "selected_rules": [
     {
-      "id": "hyp_r2_mut_5966",
-      "name": "High\u2011Value COD RTO Risk with Flexible Timing & Promo",
-      "code": "import pandas as pd\n\ndef predict(df: pd.DataFrame):\n    # Block only COD orders with significant value\n    # and either a promo code or a very high pincode RTO risk.\n    return (\n        (df['payment_mode'] == 'COD') &\n        (df['order_value'] > 4000) &\n        ((df['promo_code_used']) | (df['pincode_rolling_rto_rate'] > 0.6))\n    )",
-      "description": "Mutated from hyp_r2_3_ad5f. Strategy: 1. Remove the strict order_hour <=4 requirement.\n2. Replace the single promo requirement with a conditional: block if (p",
-      "rationale": "Diagnosis: The parent rule was too restrictive and overly specific: it required COD, an early\u2011morning hour (<=4), a high pincode RTO rate (>0.4), and the use of a promo code. This combination missed the vast maj | Strategy: 1. Remove the strict order_hour <=4 requirement.\n2. Replace the single promo requirement with a conditional: block if (promo used) OR (pincode risk > 0.6).\n3. Add an order_value > 4000 filter to exclu",
-      "target_signal": "night_rto_promo",
-      "generation_round": 2,
-      "parent_ids": [
-        "hyp_r2_3_ad5f"
-      ],
+      "id": "hyp_v1_pincode_cod_baseline",
+      "name": "Pre-drift High-Risk Pincode COD with Value Cap",
+      "code": "import pandas as pd\n\ndef predict(df: pd.DataFrame):\n    # Authentic Pre-drift Baseline Rule:\n    # Targets high historical pincode RTO rate on COD orders for first-time customers\n    # with modest order value (minimizing false alarm merchant margin insult).\n    return (\n        (df['payment_mode'] == 'COD') &\n        (df['pincode_rolling_rto_rate'] >= 0.40) &\n        (df['is_first_time_customer'] == True) &\n        (df['order_value'] <= 1000)\n    )",
+      "description": "Pre-drift baseline rule evolved on orders_train targeting high historical pincode RTO on COD first-time orders.",
+      "rationale": "Prior to drift, fraud concentrated in known high-risk pincodes with COD payment from first-time users.",
+      "target_signal": "pincode_cod_first_time",
+      "generation_round": 1,
+      "parent_ids": [],
+      "status": "champion"
+    },
+    {
+      "id": "hyp_r1_2_b735",
+      "name": "Low-Value Electronics/Fashion COD in High-RTO Pincode",
+      "code": "def predict(df):\n    return (\n        (df['payment_mode'] == 'COD') &\n        (df['pincode_rolling_rto_rate'] >= 0.3) &\n        (df['item_category'].isin(['electronics', 'fashion'])) &\n        (df['order_value'] <= 800)\n    )",
+      "description": "Captures inexpensive electronics or fashion COD orders in high-RTO pincodes.",
+      "rationale": "Fraudsters often target cheap, high-turnover items (e.g., gadgets, accessories) delivered via COD to avoid immediate payment. Combining category with a high-RTO pincode amplifies the risk signal while keeping order value low.",
+      "target_signal": "category_risk",
+      "generation_round": 1,
+      "parent_ids": [],
       "status": "champion"
     }
   ],
-  "ensemble_size": 1,
-  "pruned_count": 13,
+  "ensemble_size": 2,
+  "pruned_count": 0,
   "performance_train_pre_drift": {
     "total_orders": 10807,
-    "precision": 0.3765,
-    "recall": 0.0247,
-    "f1_score": 0.0464,
-    "net_financial_savings_inr": -76288.01
+    "precision": 0.309,
+    "recall": 0.0344,
+    "f1_score": 0.0619,
+    "net_financial_savings_inr": 6492.71
   }
 }

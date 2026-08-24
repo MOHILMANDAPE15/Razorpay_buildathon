@@ -201,6 +201,9 @@ DIAGNOSIS & MUTATION TASK:
 
     def _parse_json_response(self, text: str) -> Optional[dict]:
         """Parses reflection JSON output."""
+        if "<think>" in text and "</think>" in text:
+            text = text.split("</think>", 1)[1].strip()
+
         try:
             data = json.loads(text.strip())
             if isinstance(data, dict):

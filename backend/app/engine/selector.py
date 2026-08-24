@@ -199,7 +199,7 @@ class CostWeightedSelector:
         candidates: List[RuleHypothesis],
         df_eval: pd.DataFrame,
         max_ensemble_size: int = 4,
-        min_marginal_gain_inr: float = 0.0,
+        min_marginal_gain_inr: float = 50.0,
     ) -> EnsembleSelectionResult:
         """Executes forward greedy selection to build the optimal synergistic ensemble.
         
@@ -207,7 +207,7 @@ class CostWeightedSelector:
             candidates: Pool of candidate hypotheses.
             df_eval: Evaluation dataset DataFrame.
             max_ensemble_size: Maximum rules in selected ensemble.
-            min_marginal_gain_inr: Minimum incremental net ₹ savings required to include an extra rule.
+            min_marginal_gain_inr: Minimum incremental net ₹ savings required to include an extra rule (default ₹50).
         """
         # 1. Prune redundant & low-quality rules
         retained, pruned, prune_reasons = self.pruner.prune_candidates(

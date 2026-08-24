@@ -75,7 +75,7 @@ RULE COMPLEXITY & COVERAGE GUIDELINES:
 - Avoid ultra-narrow rules with 5+ strict AND conditions that match fewer than 10 orders.
 
 OUTPUT FORMAT:
-You must respond with valid JSON adhering to this exact schema:
+Keep thinking concise and output valid JSON adhering to this exact schema:
 {{
     "name": "Concise Descriptive Title of the Rule",
     "target_signal": "Primary fraud signal targeted (e.g., device_abuse, promo_stacking, high_value_cod, pincode_risk)",

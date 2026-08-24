@@ -1,6 +1,7 @@
 """Unit and integration tests for Generator, Reflector, Repair, and Evolution Runner."""
 
 import json
+import time
 import pandas as pd
 import pytest
 
@@ -19,9 +20,10 @@ def sample_orders_df():
     """Provides a sample DataFrame containing all valid schema features."""
     return pd.DataFrame({
         "order_id": ["ORD01", "ORD02", "ORD03", "ORD04"],
+        "customer_id": ["CUST01", "CUST02", "CUST03", "CUST04"],
         "order_value": [1000.0, 4500.0, 2000.0, 12000.0],
         "payment_mode": ["COD", "COD", "Prepaid", "COD"],
-        "is_first_time_customer": [1, 1, 0, 1],
+        "is_first_time_customer": [True, True, False, True],
         "customer_account_age_days": [5, 12, 180, 4],
         "customer_prior_orders": [0, 0, 8, 1],
         "pincode_rolling_rto_rate": [0.45, 0.35, 0.05, 0.40],
@@ -104,6 +106,7 @@ def predict(df):
 
 def test_live_generator_proposes_valid_rules(sample_orders_df):
     """Verifies that the Generator generates valid, executable rule hypotheses using Groq."""
+    time.sleep(6)
     generator = HypothesisGenerator()
     candidates = generator.generate_hypotheses(
         n_hypotheses=2,
@@ -121,6 +124,7 @@ def test_live_generator_proposes_valid_rules(sample_orders_df):
 
 def test_live_reflector_mutates_rule(sample_orders_df):
     """Verifies that the Reflector agent diagnoses failures and produces a mutated child rule."""
+    time.sleep(6)
     parent_rule = RuleHypothesis(
         id="hyp_parent_01",
         name="Naive COD High Pincode Rule",

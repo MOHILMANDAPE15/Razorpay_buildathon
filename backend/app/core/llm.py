@@ -15,7 +15,7 @@ load_dotenv()
 def get_llm_client(
     model_name: Optional[str] = None,
     temperature: float = 0.7,
-    max_tokens: int = 2048,
+    max_tokens: int = 4096,
 ) -> BaseChatModel:
     """Instantiates a LangChain Chat model client based on environment variables.
     

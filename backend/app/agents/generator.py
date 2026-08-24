@@ -119,6 +119,20 @@ Respond with a JSON array containing {n_hypotheses} rule objects.
 
     def _parse_json_response(self, text: str) -> List[dict]:
         """Robust parser for LLM JSON arrays and single objects."""
+        if "<think>" in text and "</think>" in text:
+            text = text.split("</think>", 1)[1].strip()
+
+        # Sanitize unicode quotes
+        text = (
+            text.replace("\u2011", "-")
+            .replace("\u2013", "-")
+            .replace("\u2014", "-")
+            .replace("\u2018", "'")
+            .replace("\u2019", "'")
+            .replace("\u201c", '"')
+            .replace("\u201d", '"')
+        )
+
         # 1. Direct parse
         try:
             data = json.loads(text.strip())
@@ -130,7 +144,7 @@ Respond with a JSON array containing {n_hypotheses} rule objects.
             pass
 
         # 2. Extract markdown JSON block
-        matches = re.findall(r"```(?:json)?\s*([\[\{].*?[\]\}])\s*```", text, re.DOTALL)
+        matches = re.findall(r"```(?:json)?\s*([\[\{][\s\S]*?[\]\}])\s*```", text)
         for m in matches:
             try:
                 data = json.loads(m)
@@ -142,7 +156,7 @@ Respond with a JSON array containing {n_hypotheses} rule objects.
                 continue
 
         # 3. Fallback: regex search for bracketed array
-        array_match = re.search(r"\[\s*\{.*\}\s*\]", text, re.DOTALL)
+        array_match = re.search(r"\[\s*\{[\s\S]*?\}\s*\]", text)
         if array_match:
             try:
                 data = json.loads(array_match.group(0))

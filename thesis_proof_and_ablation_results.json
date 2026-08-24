@@ -3,31 +3,29 @@
   "timestamp": "2026-08-24",
   "section_4_7_frozen_rule_proof": {
     "train": {
-      "precision": 0.3765,
-      "recall": 0.0247,
-      "f1": 0.0464,
-      "net_savings_inr": -76288.01
+      "precision": 0.309,
+      "recall": 0.0344,
+      "f1": 0.0619,
+      "net_savings_inr": 6492.71
     },
     "validation_drift": {
-      "precision": 0.5556,
-      "recall": 0.0316,
-      "f1": 0.0597,
-      "net_savings_inr": -17418.12
+      "precision": 0.3636,
+      "recall": 0.0072,
+      "f1": 0.0141,
+      "net_savings_inr": 833.58
     },
-    "degradation_delta_inr": 58869.89
+    "degradation_delta_inr": -5659.13
   },
   "section_5_4_blinded_ablation": [
     {
-      "name": "High\u2011value COD Orders from High\u2011risk Locations",
-      "code": "def predict(df):\n    return (df['col_09'] == 'COD') & (df['col_13'] > 0.8) & (df['col_10'] > 5000)",
+      "name": "COD orders with high location risk",
+      "code": "def predict(df):\n    return (df['col_09'] == 'COD') & (df['col_13'] > 0.75)",
       "blinded_columns_used": [
         "col_09",
-        "col_10",
         "col_13"
       ],
       "mapped_real_columns": [
         "payment_mode",
-        "order_value",
         "pincode_rolling_rto_rate"
       ],
       "decoy_column_used": false,
@@ -37,17 +35,17 @@
       "net_savings_inr": 0.0
     },
     {
-      "name": "Device\u2011Velocity + Promo Abuse in Rapid Order Bursts",
-      "code": "def predict(df):\n    return (df['col_16'] > 10) & (df['col_09'] == 'COD') & (df['col_14'] == True)",
+      "name": "High\u2011value Prepaid orders from risky locations",
+      "code": "def predict(df):\n    return (df['col_09'] == 'Prepaid') & (df['col_10'] > 20000) & (df['col_13'] > 0.6)",
       "blinded_columns_used": [
         "col_09",
-        "col_14",
-        "col_16"
+        "col_10",
+        "col_13"
       ],
       "mapped_real_columns": [
         "payment_mode",
-        "promo_code_used",
-        "device_order_count_24h"
+        "order_value",
+        "pincode_rolling_rto_rate"
       ],
       "decoy_column_used": false,
       "precision": 0.0,
