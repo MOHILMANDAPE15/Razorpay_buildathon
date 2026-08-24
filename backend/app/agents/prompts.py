@@ -64,6 +64,11 @@ CRITICAL RULES FOR CODE GENERATION:
 5. The rule function MUST be self-contained and syntactically valid Python.
 6. The target label `is_rto` and ground-truth drift labels (`phase`, `drift_weight`) are NOT available in `df`. Do NOT reference them.
 
+FINANCIAL COST MODEL TO MAXIMIZE NET SAVINGS:
+- Catching an RTO fraud saves ₹250 in logistics/restocking loss.
+- Wrongly blocking a genuine order burns 15% of its order value (blocking a ₹5,000 order loses ₹750!).
+- To achieve high positive Net Financial Savings (₹), rules MUST be high-precision (combine multiple specific risk signals, e.g. COD mode + high pincode RTO rate + first-time buyer, and avoid over-blocking expensive orders without strong evidence).
+
 OUTPUT FORMAT:
 You must respond with valid JSON adhering to this exact schema:
 {{

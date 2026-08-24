@@ -102,6 +102,12 @@ class RulePruner:
                 flags = execute_rule_sandboxed(cand.code, df_eval)
                 report = evaluator.evaluate_flags(flags, df_eval, cand.id, cand.name)
 
+                if report.standard_metrics.flagged_orders == 0:
+                    cand.status = "pruned"
+                    pruned_rules.append(cand)
+                    prune_reasons[cand.id] = "Zero orders flagged (noop rule)"
+                    continue
+
                 if report.cost_metrics.net_financial_savings_inr <= 0:
                     cand.status = "pruned"
                     pruned_rules.append(cand)
@@ -152,6 +158,27 @@ class RulePruner:
                 cand.status = "alive"
                 retained.append(cand)
                 retained_flags.append(flags)
+
+        # Fallback: If no candidate had positive savings, retain the top active rule (highest precision with >0 flags)
+        if not retained and pruned_rules:
+            executable = []
+            for c in candidates:
+                if c.status != "dead":
+                    try:
+                        f = execute_rule_sandboxed(c.code, df_eval)
+                        rep = evaluator.evaluate_flags(f, df_eval, c.id, c.name)
+                        if rep.standard_metrics.flagged_orders > 0:
+                            executable.append((c, rep))
+                    except Exception:
+                        pass
+            if executable:
+                # Rank by precision then net savings
+                executable.sort(key=lambda x: (x[1].standard_metrics.precision, x[1].cost_metrics.net_financial_savings_inr), reverse=True)
+                best_cand = executable[0][0]
+                best_cand.status = "alive"
+                retained = [best_cand]
+                if best_cand in pruned_rules:
+                    pruned_rules.remove(best_cand)
 
         return retained, pruned_rules, prune_reasons
 

@@ -1,0 +1,11 @@
+The one number that's missing and shouldn't be
+
+"Train Recall: 4.6% (imbalanced) → Healthy / Calibrated" — that's not a number, it's a label. Every other row in that table has a hard figure; this one doesn't. Given this is the exact metric that was broken, and you're about to use it as evidence the fix worked, get the actual percentage in there. If it's genuinely healthy, the number will say so on its own — there's no reason to describe it instead of showing it, and a vague entry sitting next to precise ones is exactly the kind of thing a sharp reader notices.
+
+Section 4.7's actual proof still hasn't been run
+
+The plumbing for the frozen rule ensemble (dual-path snapshots, MOCK vs. real) is built and tested — good. But this report only confirms the mechanism exists, not that it's produced the actual result. You still need the real run: frozen-v1 rules evaluated on train (should be decent) vs. the same frozen rules evaluated on validation (should degrade under drift), reported side by side like you did for the LightGBM baseline. That comparison is your single most important artifact — the literal thesis proof — and right now it's built but unfired. I'd treat "run it and see the actual degrade-then-recover numbers" as the next concrete task, not something to assume works because the code compiles and a mock test passes.
+
+The blinded-naming ablation needs an actual result, not just a passing structural test
+
+test_issue_2_decoy_columns_and_blinded_mapping almost certainly verifies that the column map and aliasing functions exist and work mechanically — that's necessary but it's not the thing you actually set out to prove. The point of blinded mode was: run a real Generator round against col_14-style names with no semantic hints, and see whether it still finds the real signal-bearing columns. That's a live-run result (an actual Notepad output showing which blinded columns got picked and why), not something a unit test asserting the mapping dictionary is well-formed can confirm. Worth running this for real and saving the output — that's the artifact you'd actually show a panelist who asks "prove it's not just following your column names."

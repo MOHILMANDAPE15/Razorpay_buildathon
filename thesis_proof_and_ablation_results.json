@@ -1,0 +1,57 @@
+{
+  "experiment_title": "Section 4.7 Frozen Rule Drift Proof and Section 5.4 Blinded Ablation",
+  "timestamp": "2026-08-24",
+  "section_4_7_frozen_rule_proof": {
+    "train": {
+      "precision": 1.0,
+      "recall": 0.0008,
+      "f1": 0.0015,
+      "net_savings_inr": 500.0
+    },
+    "validation_drift": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "net_savings_inr": 0.0
+    },
+    "degradation_delta_inr": -500.0
+  },
+  "section_5_4_blinded_ablation": [
+    {
+      "name": "COD with High Risk Score & Low Order History",
+      "code": "def predict(df):\n    return (df['col_09'] == 'COD') & (df['col_13'] > 0.3) & (df['col_08'] < 2)",
+      "blinded_columns_used": [
+        "col_08",
+        "col_09",
+        "col_13"
+      ],
+      "mapped_real_columns": [
+        "customer_prior_orders",
+        "payment_mode",
+        "pincode_rolling_rto_rate"
+      ],
+      "decoy_column_used": false,
+      "precision": 0.4,
+      "recall": 0.0739,
+      "f1": 0.1248,
+      "net_savings_inr": -169.4
+    },
+    {
+      "name": "High Velocity Device Activity During Off\u2011Hours",
+      "code": "def predict(df):\n    return (df['col_16'] > 5) & (df['col_17'].between(0, 5))",
+      "blinded_columns_used": [
+        "col_16",
+        "col_17"
+      ],
+      "mapped_real_columns": [
+        "device_order_count_24h",
+        "order_hour"
+      ],
+      "decoy_column_used": false,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "net_savings_inr": 0.0
+    }
+  ]
+}
