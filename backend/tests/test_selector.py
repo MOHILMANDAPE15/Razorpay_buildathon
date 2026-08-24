@@ -1,4 +1,5 @@
-"""Unit tests for Static v1 Baseline, Cost-Weighted Ensemble Selector, and Rule Pruner."""
+"""Unit tests for Static v1 LightGBM Baseline (Sec 4.8), Frozen LLM Rule Ensemble (Sec 4.7),
+Cost-Weighted Ensemble Selector, and Rule Pruner."""
 
 import pytest
 import numpy as np
@@ -6,6 +7,11 @@ import pandas as pd
 
 from app.data.loader import load_train_data, load_validation_data
 from app.engine.baseline import StaticV1Baseline, generate_and_save_v1_snapshot, SNAPSHOT_PATH
+from app.engine.frozen_rule_snapshot import (
+    FrozenRuleEnsemble,
+    MOCK_SNAPSHOT_PATH,
+    generate_frozen_rule_snapshot,
+)
 from app.engine.selector import CostWeightedSelector, EnsembleRule, RulePruner
 from app.engine.types import RuleHypothesis
 
@@ -30,12 +36,58 @@ def test_v1_baseline_training_and_snapshot_on_actual_data():
     assert 0.0 <= val_report.standard_metrics.precision <= 1.0
     assert 0.0 <= val_report.standard_metrics.recall <= 1.0
 
-    # Test snapshot file generation
+    # Test snapshot file generation -- regenerates with corrected class_weight
     snapshot = generate_and_save_v1_snapshot()
-    assert SNAPSHOT_PATH.exists()
+    assert SNAPSHOT_PATH.exists(), f"LightGBM snapshot not found at {SNAPSHOT_PATH}"
     assert "performance_train_pre_drift" in snapshot
     assert "performance_validation_drift" in snapshot
+    # Recall should now be healthy (>= 10%) with class_weight='balanced'
+    assert snapshot["performance_train_pre_drift"]["recall"] >= 0.10, (
+        f"LightGBM recall on train is suspiciously low: "
+        f"{snapshot['performance_train_pre_drift']['recall']:.4f}. "
+        "Check class_weight='balanced' was applied."
+    )
 
+
+def test_frozen_rule_ensemble_mock_evaluates_train_and_val():
+    """Section 4.7: Verifies frozen rule ensemble (MOCK path) evaluates on both splits.
+
+    This test uses the MOCK snapshot only -- never the live submission artifact.
+    It confirms:
+      1. MOCK snapshot is generated without API calls.
+      2. FrozenRuleEnsemble.evaluate(df_train) produces a valid report.
+      3. FrozenRuleEnsemble.evaluate(df_val)   produces a valid report.
+      4. Both reports are non-error EvaluationReports.
+    """
+    # Generate (or regenerate) the MOCK snapshot -- no API calls
+    snapshot = generate_frozen_rule_snapshot(live=False)
+    assert snapshot["snapshot_type"] == "MOCK_CI_FIXTURE"
+    assert MOCK_SNAPSHOT_PATH.exists()
+
+    # Load the MOCK frozen ensemble
+    ensemble = FrozenRuleEnsemble(snapshot_path=MOCK_SNAPSHOT_PATH).load()
+    assert len(ensemble.rules) >= 1
+
+    df_train = load_train_data()
+    df_val = load_validation_data()
+
+    # Evaluate on train (pre-drift)
+    train_report = ensemble.evaluate(df_train, split_name="train")
+    assert train_report.is_valid, f"Frozen ensemble eval on train failed: {train_report.error_message}"
+    assert train_report.standard_metrics.total_orders == len(df_train)
+
+    # Evaluate on validation (post-drift exposure)
+    val_report = ensemble.evaluate(df_val, split_name="val")
+    assert val_report.is_valid, f"Frozen ensemble eval on val failed: {val_report.error_message}"
+    assert val_report.standard_metrics.total_orders == len(df_val)
+
+    # Both should have financial metrics
+    assert train_report.cost_metrics is not None
+    assert val_report.cost_metrics is not None
+
+    print("\n[Sec 4.7 MOCK] Frozen Ensemble -- Train vs Val:")
+    print(f"  Train Net Rs.: {train_report.cost_metrics.net_financial_savings_inr:,.2f}")
+    print(f"  Val   Net Rs.: {val_report.cost_metrics.net_financial_savings_inr:,.2f}")
 
 def test_rule_pruner_detects_redundancy_and_negative_value():
     """Verifies that RulePruner removes negative-value rules and duplicate Jaccard overlaps."""

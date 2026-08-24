@@ -19,7 +19,7 @@ from app.engine.evaluator import CostWeightedEvaluator
 from app.engine.types import CostMetrics, EvaluationReport, StandardMetrics
 
 
-SNAPSHOT_PATH = Path(__file__).resolve().parent / "v1_baseline_snapshot.json"
+SNAPSHOT_PATH = Path(__file__).resolve().parent / "v1_lightgbm_baseline_snapshot.json"
 
 MODEL_FEATURES = [
     "day_index",
@@ -85,11 +85,14 @@ class StaticV1Baseline:
         X = self._prepare_features(df, is_training=True)
         y = df["is_rto"].values
 
+        # class_weight='balanced' corrects the ~26% RTO class imbalance;
+        # without it the model suppresses RTO probabilities and threshold sweep cannot fix it.
         self.model = lgb.LGBMClassifier(
-            n_estimators=100,
+            n_estimators=200,
             learning_rate=0.05,
-            max_depth=5,
+            max_depth=6,
             num_leaves=31,
+            class_weight="balanced",
             random_state=42,
             verbose=-1,
         )
@@ -127,7 +130,8 @@ class StaticV1Baseline:
         best_threshold = 0.5
         best_savings = -float("inf")
 
-        for threshold in np.linspace(0.1, 0.9, 17):
+        # 81-step sweep gives 0.011 granularity (0.05 → 0.95) for a well-calibrated model
+        for threshold in np.linspace(0.05, 0.95, 81):
             flags = probas >= threshold
             tp_mask = flags & (y_true == 1)
             fp_mask = flags & (y_true == 0)
@@ -159,7 +163,7 @@ def generate_and_save_v1_snapshot() -> Dict[str, Any]:
     val_report = baseline.evaluate(df_val, split_name="validation")
 
     snapshot_data = {
-        "model_name": "Static LightGBM Baseline (v1)",
+        "model_name": "Static LightGBM Baseline (v1) [Section 4.8 Benchmark]",
         "training_data": "orders_train (10,807 orders, Days 0-55)",
         "optimal_threshold": opt_thresh,
         "performance_train_pre_drift": {
