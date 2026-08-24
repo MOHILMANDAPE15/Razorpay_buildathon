@@ -106,6 +106,26 @@ class CostWeightedEvaluator:
             top_k_diagnostics=top_k_diagnostics,
         )
 
+    def evaluate_flags(
+        self,
+        flags: np.ndarray,
+        df: pd.DataFrame,
+        hypothesis_id: str = "custom_eval",
+        hypothesis_name: str = "Custom Evaluation",
+        top_k_diagnostics: int = 5,
+    ) -> EvaluationReport:
+        """Evaluates binary prediction flags directly on a DataFrame."""
+        sanitized_features, y_true, order_values = extract_features_and_labels(df)
+        return self.evaluate_predictions(
+            y_pred=flags,
+            y_true=y_true,
+            order_values=order_values,
+            sanitized_features=sanitized_features,
+            hypothesis_id=hypothesis_id,
+            hypothesis_name=hypothesis_name,
+            top_k_diagnostics=top_k_diagnostics,
+        )
+
     def _compute_evaluation_report(
         self,
         hypothesis_id: str,

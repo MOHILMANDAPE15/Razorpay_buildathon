@@ -1,0 +1,23 @@
+{
+  "model_name": "Static LightGBM Baseline (v1)",
+  "training_data": "orders_train (10,807 orders, Days 0-55)",
+  "optimal_threshold": 0.45000000000000007,
+  "performance_train_pre_drift": {
+    "total_orders": 10807,
+    "precision": 0.8333,
+    "recall": 0.0464,
+    "f1_score": 0.0879,
+    "avoided_rto_loss_inr": 30000.0,
+    "false_positive_insult_cost_inr": 14309.89,
+    "net_financial_savings_inr": 15690.11
+  },
+  "performance_validation_drift": {
+    "total_orders": 3885,
+    "precision": 0.466,
+    "recall": 0.0866,
+    "f1_score": 0.146,
+    "avoided_rto_loss_inr": 24000.0,
+    "false_positive_insult_cost_inr": 49931.09,
+    "net_financial_savings_inr": -25931.09
+  }
+}
