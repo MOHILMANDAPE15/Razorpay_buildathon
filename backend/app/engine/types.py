@@ -16,6 +16,21 @@ class RuleHypothesis(BaseModel):
     parent_ids: List[str] = Field(default_factory=list, description="IDs of parent hypotheses if this was mutated/merged")
     status: str = Field(default="candidate", description="Status: candidate, alive, mutated, merged, pruned, dead")
 
+    def __init__(self, **data):
+        for k in ["name", "code", "description", "rationale"]:
+            if k in data and isinstance(data[k], str):
+                data[k] = (
+                    data[k]
+                    .replace("\u2011", "-")
+                    .replace("\u2013", "-")
+                    .replace("\u2014", "-")
+                    .replace("\u2018", "'")
+                    .replace("\u2019", "'")
+                    .replace("\u201c", '"')
+                    .replace("\u201d", '"')
+                )
+        super().__init__(**data)
+
 
 class CostMetrics(BaseModel):
     """Cost-weighted financial impact metrics (in INR ₹)."""
@@ -57,11 +72,14 @@ class EvaluationReport(BaseModel):
     """Comprehensive evaluation results combining standard metrics, financial fitness, and diagnostics."""
     hypothesis_id: str
     hypothesis_name: str
+    dataset_split: Optional[str] = "validation"
     is_valid: bool = True
     error_message: Optional[str] = None
     execution_time_ms: float = 0.0
     standard_metrics: Optional[StandardMetrics] = None
     cost_metrics: Optional[CostMetrics] = None
+    gate_status: Optional[str] = "PASSED"
+    gate_reasons: List[str] = Field(default_factory=list)
     top_false_positives: List[DiagnosticOrder] = Field(default_factory=list)
     top_false_negatives: List[DiagnosticOrder] = Field(default_factory=list)
 

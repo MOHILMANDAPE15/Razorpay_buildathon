@@ -14,21 +14,34 @@ from app.agents.prompts import REPAIR_SYSTEM_PROMPT
 
 def _extract_code_from_response(text: str) -> Tuple[str, str]:
     """Extracts python code and explanation from JSON or markdown code blocks."""
+    # Sanitize unicode
+    text = (
+        text.replace("\u2011", "-")
+        .replace("\u2013", "-")
+        .replace("\u2014", "-")
+        .replace("\u2018", "'")
+        .replace("\u2019", "'")
+        .replace("\u201c", '"')
+        .replace("\u201d", '"')
+    )
+
     # Attempt 1: Parse direct JSON
     try:
         data = json.loads(text.strip())
-        if isinstance(data, dict) and "repaired_code" in data:
-            return data["repaired_code"], data.get("explanation", "Repaired via JSON response")
+        if isinstance(data, dict) and ("repaired_code" in data or "code" in data):
+            code = data.get("repaired_code") or data.get("code")
+            return code.strip(), data.get("explanation", "Repaired via JSON response")
     except Exception:
         pass
 
     # Attempt 2: Extract JSON from markdown fences ```json ... ```
-    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    json_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", text)
     if json_match:
         try:
             data = json.loads(json_match.group(1))
-            if isinstance(data, dict) and "repaired_code" in data:
-                return data["repaired_code"], data.get("explanation", "Repaired via JSON block")
+            if isinstance(data, dict) and ("repaired_code" in data or "code" in data):
+                code = data.get("repaired_code") or data.get("code")
+                return code.strip(), data.get("explanation", "Repaired via JSON block")
         except Exception:
             pass
 

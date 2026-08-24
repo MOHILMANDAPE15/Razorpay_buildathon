@@ -118,3 +118,109 @@ class Notepad:
         for hyp_id, record in self.registry.items():
             if hyp_id not in active_ids and record.hypothesis.status == "alive":
                 record.hypothesis.status = "pruned"
+
+    def sync_to_db(self, db_session=None, run_id: Optional[str] = None) -> None:
+        """Persists all hypotheses, lineages, and evaluation reports in memory into PostgreSQL."""
+        from app.db.session import get_db
+        from app.db.models import (
+            Hypothesis as HypothesisModel,
+            HypothesisLineage as HypothesisLineageModel,
+            EvaluationReportModel,
+        )
+
+        should_close = False
+        if db_session is None:
+            try:
+                db_session = next(get_db())
+                should_close = True
+            except Exception as e:
+                # If database is offline/unreachable in testing, fail gracefully
+                return
+
+        try:
+            for hyp_id, rec in self.registry.items():
+                hyp = rec.hypothesis
+                existing = db_session.query(HypothesisModel).filter_by(hypothesis_id=hyp.id).first()
+                if existing:
+                    existing.status = hyp.status
+                    existing.generation_round = hyp.generation_round
+                    existing.name = hyp.name
+                    existing.rule_code = hyp.code
+                    existing.description = hyp.description
+                    existing.rationale = hyp.rationale
+                    existing.target_signal = hyp.target_signal
+                    if run_id and not existing.run_id:
+                        existing.run_id = run_id
+                else:
+                    db_hyp = HypothesisModel(
+                        hypothesis_id=hyp.id,
+                        run_id=run_id,
+                        generation_round=hyp.generation_round,
+                        name=hyp.name,
+                        target_signal=hyp.target_signal,
+                        description=hyp.description,
+                        rationale=hyp.rationale,
+                        rule_code=hyp.code,
+                        status=hyp.status,
+                    )
+                    db_session.add(db_hyp)
+                db_session.flush()
+
+                # Persist lineages
+                for pid in hyp.parent_ids:
+                    existing_lin = db_session.query(HypothesisLineageModel).filter_by(
+                        parent_hypothesis_id=pid,
+                        child_hypothesis_id=hyp.id,
+                    ).first()
+                    if not existing_lin:
+                        # Ensure parent exists in DB before creating lineage foreign key
+                        parent_in_db = db_session.query(HypothesisModel).filter_by(hypothesis_id=pid).first()
+                        if parent_in_db:
+                            lin = HypothesisLineageModel(
+                                parent_hypothesis_id=pid,
+                                child_hypothesis_id=hyp.id,
+                                relationship_type="mutated_from",
+                                mutation_strategy=hyp.description or "Evolved mutation",
+                            )
+                            db_session.add(lin)
+
+                # Persist evaluation reports
+                for rep in rec.all_reports:
+                    if rep.is_valid and rep.standard_metrics and rep.cost_metrics:
+                        sm = rep.standard_metrics
+                        cm = rep.cost_metrics
+                        split_name = getattr(rep, "dataset_split", None) or "validation"
+                        existing_rep = db_session.query(EvaluationReportModel).filter_by(
+                            hypothesis_id=hyp.id,
+                            dataset_split=split_name,
+                        ).first()
+                        if not existing_rep:
+                            db_rep = EvaluationReportModel(
+                                hypothesis_id=hyp.id,
+                                dataset_split=split_name,
+                                precision=sm.precision,
+                                recall=sm.recall,
+                                f1_score=sm.f1,
+                                accuracy=sm.accuracy,
+                                flag_rate=sm.flag_rate,
+                                total_orders=sm.total_orders,
+                                true_positives=sm.true_positives,
+                                false_positives=sm.false_positives,
+                                true_negatives=sm.true_negatives,
+                                false_negatives=sm.false_negatives,
+                                avoided_rto_loss_inr=cm.avoided_rto_loss_inr,
+                                false_positive_insult_cost_inr=cm.false_positive_insult_cost_inr,
+                                net_financial_savings_inr=cm.net_financial_savings_inr,
+                                cost_efficiency_ratio=cm.cost_efficiency_ratio,
+                                gate_1_status=getattr(rep, "gate_status", "PASSED") or "PASSED",
+                                gate_1_reasons=getattr(rep, "gate_reasons", []) or [],
+                            )
+                            db_session.add(db_rep)
+
+            db_session.commit()
+        except Exception as e:
+            db_session.rollback()
+            print(f"[Notepad] Error syncing to DB: {e}")
+        finally:
+            if should_close:
+                db_session.close()

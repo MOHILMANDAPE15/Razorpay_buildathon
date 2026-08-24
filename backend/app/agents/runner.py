@@ -1,6 +1,7 @@
 """Autonomous Evolution Runner coordinating the multi-round self-evolving fraud engine."""
 
 import time
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -81,6 +82,22 @@ class EvolutionRunner:
         start_time = time.perf_counter()
         df_val = df_validation if df_validation is not None else load_validation_data()
         df_sample = sanitize_features(df_val.head(20))
+
+        run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+        db = None
+        try:
+            from app.db.session import get_db
+            from app.db.models import EvolutionRun
+            db = next(get_db())
+            db_run = EvolutionRun(
+                run_id=run_id,
+                total_rounds=rounds,
+                status="RUNNING",
+            )
+            db.add(db_run)
+            db.commit()
+        except Exception as e:
+            print(f"[EvolutionRunner] DB connection note: {e}")
 
         initial_best_net = 0.0
         active_baseline_report: Optional[EvaluationReport] = None
@@ -200,9 +217,34 @@ class EvolutionRunner:
                     f"(Precision: {best_rep.standard_metrics.precision*100:.1f}%, Recall: {best_rep.standard_metrics.recall*100:.1f}%)"
                 )
 
+            # Persist state to DB after each round
+            if db is not None:
+                try:
+                    self.notepad.sync_to_db(db_session=db, run_id=run_id)
+                except Exception as exc:
+                    print(f"[EvolutionRunner] DB sync note: {exc}")
+
         total_exec_sec = time.perf_counter() - start_time
         final_top = self.notepad.get_top_hypotheses(top_k=top_k_keep)
         final_best_net = final_top[0][1].cost_metrics.net_financial_savings_inr if final_top else 0.0
+
+        if db is not None:
+            try:
+                from app.db.models import EvolutionRun
+                db_run = db.query(EvolutionRun).filter_by(run_id=run_id).first()
+                if db_run:
+                    db_run.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+                    db_run.hypotheses_tested = len(self.notepad.registry)
+                    db_run.initial_best_net_savings_inr = round(initial_best_net, 2)
+                    db_run.final_best_net_savings_inr = round(final_best_net, 2)
+                    db_run.net_savings_delta_inr = round(final_best_net - initial_best_net, 2)
+                    db_run.champion_hypothesis_id = final_top[0][0].id if final_top else None
+                    db_run.status = "COMPLETED"
+                    db.commit()
+            except Exception as exc:
+                print(f"[EvolutionRunner] DB run finalize note: {exc}")
+            finally:
+                db.close()
 
         top_rules_summary = [
             {
