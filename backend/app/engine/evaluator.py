@@ -9,6 +9,7 @@ from app.core.config import CostModelConfig, cost_config
 from app.core.sandbox import execute_rule_sandboxed, SecurityError, RuleExecutionError, RuleTimeoutError
 from app.data.schema import extract_features_and_labels, sanitize_features
 from app.engine.types import (
+    BootstrappedMetrics,
     CostMetrics,
     DiagnosticOrder,
     EvaluationReport,
@@ -124,6 +125,125 @@ class CostWeightedEvaluator:
             hypothesis_id=hypothesis_id,
             hypothesis_name=hypothesis_name,
             top_k_diagnostics=top_k_diagnostics,
+        )
+
+    def evaluate_hypothesis_bootstrap(
+        self,
+        hypothesis: RuleHypothesis,
+        df: pd.DataFrame,
+        n_bootstrap: int = 200,
+        ci_percentile: float = 95.0,
+        random_seed: int = 42,
+    ) -> BootstrappedMetrics:
+        """Executes a rule once and computes bootstrap confidence intervals (e.g. 95% CI)
+        over n_bootstrap resamples with replacement.
+        
+        Args:
+            hypothesis: The RuleHypothesis to evaluate.
+            df: Input dataset (e.g. validation or test split).
+            n_bootstrap: Number of bootstrap iterations (default 200).
+            ci_percentile: Confidence interval percentage (default 95.0).
+            random_seed: Seed for reproducible bootstrap sampling.
+            
+        Returns:
+            BootstrappedMetrics: Mean, standard deviation, and CI bounds for precision,
+                                recall, F1, and net financial savings (INR).
+        """
+        sanitized_features, y_true, order_values = extract_features_and_labels(df)
+        
+        # Execute rule inside security sandbox
+        y_pred = execute_rule_sandboxed(
+            code_str=hypothesis.code,
+            df_features=sanitized_features,
+            timeout_sec=self.config.rule_timeout_sec,
+        )
+        
+        return self.evaluate_predictions_bootstrap(
+            y_pred=y_pred,
+            y_true=y_true,
+            order_values=order_values,
+            n_bootstrap=n_bootstrap,
+            ci_percentile=ci_percentile,
+            random_seed=random_seed,
+        )
+
+    def evaluate_predictions_bootstrap(
+        self,
+        y_pred: np.ndarray,
+        y_true: np.ndarray,
+        order_values: np.ndarray,
+        n_bootstrap: int = 200,
+        ci_percentile: float = 95.0,
+        random_seed: int = 42,
+    ) -> BootstrappedMetrics:
+        """Computes bootstrap confidence intervals from precomputed predictions."""
+        y_pred = np.asarray(y_pred).astype(int)
+        y_true = np.asarray(y_true).astype(int)
+        order_values = np.asarray(order_values).astype(float)
+        
+        n_samples = len(y_true)
+        if n_samples == 0:
+            raise ValueError("Cannot compute bootstrap metrics on empty dataset.")
+
+        rng = np.random.default_rng(random_seed)
+        
+        precisions = []
+        recalls = []
+        f1s = []
+        net_savings_list = []
+        
+        alpha_lower = (100.0 - ci_percentile) / 2.0
+        alpha_upper = 100.0 - alpha_lower
+        
+        for _ in range(n_bootstrap):
+            idx = rng.choice(n_samples, size=n_samples, replace=True)
+            b_pred = y_pred[idx]
+            b_true = y_true[idx]
+            b_vals = order_values[idx]
+            
+            tp = int(np.sum((b_pred == 1) & (b_true == 1)))
+            fp = int(np.sum((b_pred == 1) & (b_true == 0)))
+            fn = int(np.sum((b_pred == 0) & (b_true == 1)))
+            flagged = tp + fp
+            actual_pos = tp + fn
+            
+            p = float(tp / flagged) if flagged > 0 else 0.0
+            r = float(tp / actual_pos) if actual_pos > 0 else 0.0
+            f = float(2 * p * r / (p + r)) if (p + r) > 0 else 0.0
+            
+            avoided_rto = float(tp * self.config.avoided_rto_cost_inr)
+            fp_costs = float(np.sum(b_vals[(b_pred == 1) & (b_true == 0)] * self.config.fp_margin_loss_rate))
+            net_s = avoided_rto - fp_costs
+            
+            precisions.append(p)
+            recalls.append(r)
+            f1s.append(f)
+            net_savings_list.append(net_s)
+            
+        p_arr = np.array(precisions)
+        r_arr = np.array(recalls)
+        f_arr = np.array(f1s)
+        s_arr = np.array(net_savings_list)
+        
+        return BootstrappedMetrics(
+            n_bootstrap=n_bootstrap,
+            ci_percentile=ci_percentile,
+            mean_precision=round(float(np.mean(p_arr)), 4),
+            std_precision=round(float(np.std(p_arr)), 4),
+            ci_lower_precision=round(float(np.percentile(p_arr, alpha_lower)), 4),
+            ci_upper_precision=round(float(np.percentile(p_arr, alpha_upper)), 4),
+            mean_recall=round(float(np.mean(r_arr)), 4),
+            std_recall=round(float(np.std(r_arr)), 4),
+            ci_lower_recall=round(float(np.percentile(r_arr, alpha_lower)), 4),
+            ci_upper_recall=round(float(np.percentile(r_arr, alpha_upper)), 4),
+            mean_f1=round(float(np.mean(f_arr)), 4),
+            std_f1=round(float(np.std(f_arr)), 4),
+            ci_lower_f1=round(float(np.percentile(f_arr, alpha_lower)), 4),
+            ci_upper_f1=round(float(np.percentile(f_arr, alpha_upper)), 4),
+            mean_net_savings_inr=round(float(np.mean(s_arr)), 2),
+            std_net_savings_inr=round(float(np.std(s_arr)), 2),
+            ci_lower_net_savings_inr=round(float(np.percentile(s_arr, alpha_lower)), 2),
+            ci_upper_net_savings_inr=round(float(np.percentile(s_arr, alpha_upper)), 2),
         )
 
     def _compute_evaluation_report(

@@ -11,7 +11,7 @@ Available Order Features in pandas DataFrame `df`:
 - `customer_account_age_days` (int): Age of customer account in days
 - `customer_prior_orders` (int): Count of previous completed orders by this customer
 - `payment_mode` (str): 'COD' (Cash on Delivery) or 'Prepaid' (Cards/UPI/NetBanking)
-- `order_value` (float): Total monetary value of order in INR (₹)
+- `order_value` (float): Total monetary value of order in INR (Rs.)
 - `item_category` (str): Product category (e.g., 'electronics', 'fashion', 'beauty', 'home')
 - `pincode` (str): Delivery destination pincode
 - `pincode_rolling_rto_rate` (float): Historical RTO rate for this pincode (0.0 to 1.0)
@@ -19,6 +19,35 @@ Available Order Features in pandas DataFrame `df`:
 - `device_id` (str): Unique hardware/browser device fingerprint
 - `device_order_count_24h` (int): Number of orders placed from this same device in trailing 24 hours
 - `order_hour` (int): Hour of day the order was placed (0 to 23)
+- `device_model_name` (str): Customer's smartphone model name (e.g., 'Samsung_A54', 'Redmi_9')
+- `app_theme_color` (str): UI theme preference chosen by customer ('dark', 'light', 'auto')
+"""
+
+# Blinded schema used during Section 5.4 ablation runs.
+# Column names are generic (col_01..col_19). The sandbox transparently
+# aliases col_XX -> real names at execution time, so blinded rule code works.
+# Column types and value examples are preserved; semantic names are hidden.
+BLINDED_SCHEMA_DOCUMENTATION = """
+Available Order Features in pandas DataFrame `df` (blinded column names):
+- `col_01` (str): Order identifier string
+- `col_02` (str): Date string (YYYY-MM-DD)
+- `col_03` (str): Timestamp string
+- `col_04` (int): Integer index from 0 to 89
+- `col_05` (str): Customer identifier string
+- `col_06` (int): Binary indicator, 0 or 1
+- `col_07` (int): Integer count in days
+- `col_08` (int): Integer count of previous orders
+- `col_09` (str): Categorical string with values 'COD' or 'Prepaid'
+- `col_10` (float): Positive float, currency amount in INR
+- `col_11` (str): Categorical string (product type)
+- `col_12` (str): Alphanumeric string (location code)
+- `col_13` (float): Float between 0.0 and 1.0
+- `col_14` (bool): True or False
+- `col_15` (str): Device fingerprint string
+- `col_16` (int): Non-negative integer count (trailing 24h window)
+- `col_17` (int): Integer 0 to 23
+- `col_18` (str): Categorical string, multiple possible values
+- `col_19` (str): Categorical string with values 'dark', 'light', 'auto'
 """
 
 GENERATOR_SYSTEM_PROMPT = f"""You are the Lead Fraud Detection Rule Engineer for Aegis-RTO, an autonomous Return-to-Origin (RTO) and Cash-on-Delivery (COD) fraud defense system in Indian e-commerce.

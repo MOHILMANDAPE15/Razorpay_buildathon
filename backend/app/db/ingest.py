@@ -16,10 +16,12 @@ from app.db.session import Base, get_engine
 from app.db.models import OrderTrain, OrderValidation, OrderHeldOutTest
 
 
-def init_db(engine=None):
+def init_db(engine=None, reset_order_tables: bool = True):
     """Creates all database tables defined in SQLAlchemy models."""
     db_engine = engine or get_engine()
     print("[DB] Initializing database tables...")
+    if reset_order_tables:
+        Base.metadata.drop_all(bind=db_engine)
     Base.metadata.create_all(bind=db_engine)
     print("[DB] Tables created successfully.")
 

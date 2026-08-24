@@ -24,7 +24,10 @@ CREATE TABLE IF NOT EXISTS orders_train (
     phase VARCHAR(32) DEFAULT 'pre_drift',
     drift_weight NUMERIC(6, 4) DEFAULT 0.0,
     is_rto INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    -- Circularity guard decoy columns (Section 5.4): random, NO causal link to is_rto
+    device_model_name VARCHAR(64),
+    app_theme_color VARCHAR(16)
 );
 
 CREATE INDEX IF NOT EXISTS idx_train_customer ON orders_train(customer_id);
@@ -54,7 +57,10 @@ CREATE TABLE IF NOT EXISTS orders_validation (
     phase VARCHAR(32) DEFAULT 'transition',
     drift_weight NUMERIC(6, 4) DEFAULT 0.5,
     is_rto INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    -- Circularity guard decoy columns (Section 5.4): random, NO causal link to is_rto
+    device_model_name VARCHAR(64),
+    app_theme_color VARCHAR(16)
 );
 
 CREATE INDEX IF NOT EXISTS idx_val_customer ON orders_validation(customer_id);
@@ -84,7 +90,10 @@ CREATE TABLE IF NOT EXISTS orders_held_out_test (
     phase VARCHAR(32) DEFAULT 'post_drift',
     drift_weight NUMERIC(6, 4) DEFAULT 1.0,
     is_rto INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    -- Circularity guard decoy columns (Section 5.4): random, NO causal link to is_rto
+    device_model_name VARCHAR(64),
+    app_theme_color VARCHAR(16)
 );
 
 CREATE INDEX IF NOT EXISTS idx_test_customer ON orders_held_out_test(customer_id);

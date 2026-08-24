@@ -25,7 +25,7 @@ def get_utc_now():
 
 
 class OrderBaseMixin:
-    """Base mixin defining the 17 order features, drift schedule attributes, and target label."""
+    """Base mixin defining the 17 order features + 2 decoy columns, drift schedule, and target label."""
     order_id = Column(String(64), primary_key=True, index=True)
     order_date = Column(Date, nullable=False)
     order_datetime = Column(DateTime, nullable=False)
@@ -47,6 +47,9 @@ class OrderBaseMixin:
     drift_weight = Column(Numeric(6, 4))
     is_rto = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=get_utc_now)
+    # Circularity-guard decoy columns (Section 5.4): random, NO causal link to is_rto
+    device_model_name = Column(String(64), nullable=True)
+    app_theme_color = Column(String(16), nullable=True)
 
 
 class OrderTrain(Base, OrderBaseMixin):

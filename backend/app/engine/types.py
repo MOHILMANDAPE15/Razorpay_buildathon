@@ -80,3 +80,42 @@ class RegressionReport(BaseModel):
     regressed_order_count: int
     reasons: List[str] = Field(default_factory=list)
     details: str = ""
+
+
+class BootstrappedMetrics(BaseModel):
+    """Bootstrap confidence intervals (e.g. 95% CI) computed over N resamples."""
+    n_bootstrap: int
+    ci_percentile: float = 95.0
+    
+    mean_precision: float
+    std_precision: float
+    ci_lower_precision: float
+    ci_upper_precision: float
+
+    mean_recall: float
+    std_recall: float
+    ci_lower_recall: float
+    ci_upper_recall: float
+
+    mean_f1: float
+    std_f1: float
+    ci_lower_f1: float
+    ci_upper_f1: float
+
+    mean_net_savings_inr: float
+    std_net_savings_inr: float
+    ci_lower_net_savings_inr: float
+    ci_upper_net_savings_inr: float
+
+
+class AuditResult(BaseModel):
+    """Gate 3 Defense-Only Audit check result."""
+    gate_name: str = "Gate 3: Defense-Only Audit"
+    hypothesis_id: str
+    is_defense_only: bool
+    status: str = Field(description="'PASSED' or 'FAILED'")
+    phase_1_keyword_passed: bool
+    phase_2_llm_judge_passed: bool
+    flagged_keywords: List[str] = Field(default_factory=list)
+    judge_reasoning: str = ""
+    details: str = ""

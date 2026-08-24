@@ -44,9 +44,11 @@ class HypothesisGenerator:
 {notepad_summary}
 
 TASK:
-Propose {n_hypotheses} diverse, high-precision fraud detection rules targeting different fraud signals:
-1. One rule targeting COD high-value risk or pincode history combinations.
-2. One rule targeting device reuse abuse (device_order_count_24h) or promo code stacking abuse.
+You are analyzing Indian e-commerce COD (Cash on Delivery) order data where some orders result in RTO — Return-To-Origin. RTO occurs when a package is shipped but never delivered: the customer refuses, is absent, or the order was fraudulent. Each undelivered COD order causes direct logistics and restocking loss.
+
+Your objective is to propose {n_hypotheses} DIVERSE candidate fraud detection rules. Each rule must flag different order patterns — do not propose rules that look for the same signal. Reason from the available data columns to find patterns that distinguish genuine orders from high-risk ones.
+
+You have access to these columns (described in your system prompt). Use any combination of them. Do not assume which columns are important — discover that from reasoning about e-commerce fraud dynamics and the column semantics.
 
 Respond with a JSON array containing {n_hypotheses} rule objects.
 """

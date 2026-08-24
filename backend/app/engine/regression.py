@@ -1,4 +1,10 @@
-"""Regression Suite (Gate 1) for anti-catastrophic-forgetting verification."""
+"""Regression Suite (Gate 1) for anti-catastrophic-forgetting verification.
+
+Gate Architecture:
+- Gate 1: Regression Suite (historical validation re-check against baseline with noise tolerance)
+- Gate 2: Held-Out Test Split Single-Touch Verification (final frozen ensemble proof)
+- Gate 3: Defense-Only Audit Gate (keyword scanning + LLM adversarial intent judge)
+"""
 
 from typing import List, Optional, Tuple
 import pandas as pd
@@ -14,8 +20,8 @@ class RegressionHarness:
     def __init__(
         self,
         evaluator: Optional[CostWeightedEvaluator] = None,
-        max_recall_drop_tolerance: float = 0.03,  # Max 3% recall degradation allowed
-        max_cost_drop_tolerance_inr: float = 0.0, # Cannot degrade net financial savings
+        max_recall_drop_tolerance: float = 0.03,    # Max 3% recall degradation allowed
+        max_cost_drop_tolerance_inr: float = 500.0, # Rs. 500 noise buffer tolerance band (avoids zero-tolerance sampling jitter)
     ):
         self.evaluator = evaluator or CostWeightedEvaluator()
         self.max_recall_drop_tolerance = max_recall_drop_tolerance
@@ -26,13 +32,16 @@ class RegressionHarness:
         candidate_hypothesis: RuleHypothesis,
         df_validation: pd.DataFrame,
         baseline_report: Optional[EvaluationReport] = None,
+        baseline_ci_lower_inr: Optional[float] = None,
     ) -> Tuple[bool, RegressionReport, EvaluationReport]:
         """Runs candidate through Gate 1 regression testing.
         
         Args:
             candidate_hypothesis: The proposed or mutated hypothesis to test.
             df_validation: The validation dataset split.
-            baseline_report: Evaluation report of the current active baseline/generation (if any).
+            baseline_report: Evaluation report of current active baseline (if any).
+            baseline_ci_lower_inr: Optional bootstrap CI lower bound of baseline net savings.
+                                   If provided, candidate must not fall below this lower bound.
             
         Returns:
             Tuple[bool, RegressionReport, EvaluationReport]:
@@ -105,12 +114,18 @@ class RegressionHarness:
         reasons: List[str] = []
         passed = True
 
-        # Check 1: Financial Degradation Check
-        if delta_net < -self.max_cost_drop_tolerance_inr:
+        # Check 1: Financial Degradation Check (respects bootstrap CI lower bound if provided, else Rs. 500 buffer)
+        if baseline_ci_lower_inr is not None:
+            if cand_net < baseline_ci_lower_inr:
+                passed = False
+                reasons.append(
+                    f"Candidate net savings (₹{cand_net:.2f}) fell below baseline bootstrap 95% CI lower bound (₹{baseline_ci_lower_inr:.2f})."
+                )
+        elif delta_net < -self.max_cost_drop_tolerance_inr:
             passed = False
             reasons.append(
                 f"Net financial savings regressed by ₹{abs(round(delta_net, 2))} "
-                f"(Baseline: ₹{base_net} vs Candidate: ₹{cand_net})."
+                f"(Baseline: ₹{base_net} vs Candidate: ₹{cand_net}, tolerance: ₹{self.max_cost_drop_tolerance_inr})."
             )
 
         # Check 2: Catastrophic Recall Drop Check

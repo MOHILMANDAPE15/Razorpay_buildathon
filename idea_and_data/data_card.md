@@ -33,6 +33,8 @@ validate-and-test-on-future mirrors how the system would actually be deployed.
 | `promo_code_used` | promo abuse signal |
 | `device_id`, `device_order_count_24h` | device reuse signal, **causal** (trailing 24h count using only past orders) |
 | `order_hour` | hour of day (0–23) |
+| `device_model_name` | **Decoy column** (Section 5.4 circularity guard): random smartphone model string, NO causal link to `is_rto` |
+| `app_theme_color` | **Decoy column** (Section 5.4 circularity guard): random UI theme preference (`dark`/`light`/`auto`), NO causal link to `is_rto` |
 | `phase`, `drift_weight` | ground-truth drift schedule — **narrative/eval only, not a feature** |
 | `is_rto` | target label (1 = returned to origin / abusive loss, 0 = fine) |
 
