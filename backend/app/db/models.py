@@ -180,3 +180,19 @@ class HumanReviewItem(Base):
     analyst_notes = Column(Text, nullable=True)
     reviewed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=get_utc_now)
+
+
+class MissClusterCooldown(Base):
+    """Tracks residual miner miss cluster discovery, cooldown windows, and miss volume state."""
+    __tablename__ = "miss_cluster_cooldowns"
+
+    cluster_id = Column(String(64), primary_key=True, index=True)
+    cluster_name = Column(String(255), nullable=False)
+    last_mined_round = Column(Integer, nullable=False, default=1)
+    last_miss_count = Column(Integer, nullable=False, default=0)
+    cooldown_until_round = Column(Integer, nullable=False, default=0)
+    associated_hypothesis_id = Column(String(64), ForeignKey("hypotheses.hypothesis_id", ondelete="SET NULL"), nullable=True)
+    status = Column(String(32), default="ACTIVE")  # ACTIVE, ON_COOLDOWN, EXPIRED, BYPASSED_SURGE
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+

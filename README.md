@@ -4,7 +4,7 @@
 > 
 > *An autonomous, self-evolving fraud defense system that discovers, validates, and refines executable Python fraud detection rules in response to shifting adversarial tactics and Return-to-Origin (RTO) / Cash-on-Delivery (COD) abuse.*
 
-[![Tests](https://img.shields.io/badge/Tests-58%2F58%20Passing-emerald?style=for-the-badge&logo=pytest)](file:///c:/Users/Dell/Razorpay_buildathon/backend/tests)
+[![Tests](https://img.shields.io/badge/Tests-63%2F63%20Passing-emerald?style=for-the-badge&logo=pytest)](file:///c:/Users/Dell/Razorpay_buildathon/backend/tests)
 [![Track](https://img.shields.io/badge/Track%202-AI%20Risk%20Manager-indigo?style=for-the-badge)](https://razorpay.com/buildathon)
 [![Policy](https://img.shields.io/badge/Policy-100%25%20Defense--Only-blue?style=for-the-badge)](file:///c:/Users/Dell/Razorpay_buildathon/backend/app/engine/defense_audit.py)
 [![Inference](https://img.shields.io/badge/Inference-Sub--Millisecond-purple?style=for-the-badge)](file:///c:/Users/Dell/Razorpay_buildathon/backend/app/core/sandbox.py)
@@ -94,7 +94,7 @@ In Indian e-commerce, Cash-on-Delivery (COD) accounts for over **60% of checkout
 
 ### 2. Dual-Trigger Evolution Architecture
 * **Real-Time Macro Drift Detector**: Tracks live scoring telemetry using a sliding-window binomial Z-score ($\ge 2.50\sigma$) and CUSUM change-point accumulator to detect sudden coordinated fraud bursts in real time.
-* **Offline Micro Residual Miner**: Scans realized false negatives (unflagged RTO abuse that shipped) across mature orders ($> 5\text{ days}$). It clusters emergent micro-patterns that do not trigger macro volume alerts and provides targeted agendas to the Generator.
+* **Offline Micro Residual Miner**: Scans realized false negatives (unflagged RTO abuse that shipped) across mature orders ($> 5\text{ days}$). It dynamically discovers emergent micro-patterns with Chi-Square statistical significance ($p < 0.05$), depth caps ($\le 3$ conjuncts), deterministic zero-cost agenda templating, and cluster cooldowns with $>50\%$ surge bypass.
 
 ### 3. Three-Way Honest Decision Routing
 * **Auto-Approve** ($\text{Risk} < 0.35$): 96.06% of volume processed instantly with zero merchant friction.
@@ -104,6 +104,7 @@ In Indian e-commerce, Cash-on-Delivery (COD) accounts for over **60% of checkout
 ### 4. Production Guardrails & Industry Reality
 * **Strict Two-Phase Defense-Only Audit Gate (Gate 3)**: Regex filter + LLM adversarial judge guaranteeing generated rule rationales describe detection logic and never provide evasion tactics.
 * **Label Maturity Gate**: Orders are only mined after their delivery resolution window has closed, preventing in-flight orders from distorting false-negative counts.
+* **Miss-Cluster Cooldown & Persistence**: Pruned or rejected clusters enter an $N=3$ round cooldown persisted in the `miss_cluster_cooldowns` DB table, saving LLM budget unless miss volume escalates by $>50\%$.
 * **Shipped-Holdout Against Outcome Censoring**: Optional random exploration holdout (`shipped_holdout_rate`, default `0.0`) permitting a small fraction of flagged orders to ship to observe unbiased ground truth and prevent survivorship bias.
 * **Single-Touch Held-Out Test Isolation**: Strict process-level and disk-level locking (`evaluate_on_held_out_test()`) preventing test set data leakage.
 
@@ -274,6 +275,9 @@ python backend/scratch/run_shadow_control.py
 #### Q4: "How do you guarantee generated code cannot execute arbitrary shell commands?"
 > **Answer**: All rule execution occurs within [`sandbox.py`](file:///c:/Users/Dell/Razorpay_buildathon/backend/app/core/sandbox.py) via strict Abstract Syntax Tree (AST) validation. We statically parse candidate Python code before compilation, blocking `import`, `exec`, `eval`, `open`, `__subclasses__`, and OS/subprocess calls. Execution is strictly sandboxed with CPU timeout protection.
 
+#### Q5: "What stops the same miss cluster from being re-proposed every round after it's rejected or pruned?"
+> **Answer**: Aegis-RTO enforces a **Miss-Cluster Cooldown Window** ($N=3$ rounds, matching the Selector's unused-pruning window). When a hypothesis synthesized for a cluster is rejected by the cost gate or pruned by the Selector, its `cluster_id` is placed on cooldown and persisted in the `miss_cluster_cooldowns` DB table. During cooldown, the cluster is suppressed from the Generator's agenda to avoid wasting LLM budget. **Surge Exception**: If the cluster's realized false-negative volume increases by **$>50\%$** over its last mined baseline, the cooldown is automatically bypassed so escalating attacks are never ignored.
+
 ---
 
 ## 👤 Author & Acknowledgements
@@ -281,3 +285,4 @@ python backend/scratch/run_shadow_control.py
 - **GitHub**: [@MOHILMANDAPE15](https://github.com/MOHILMANDAPE15)
 - **Email**: mohilmandpe33@gmail.com
 - **Track**: Razorpay AI Buildathon 2026 — Track 2 (Return-Risk Scorer / AI Risk Manager)
+
