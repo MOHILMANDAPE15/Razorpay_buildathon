@@ -65,13 +65,19 @@ CRITICAL RULES FOR CODE GENERATION:
 6. The target label `is_rto` and ground-truth drift labels (`phase`, `drift_weight`) are NOT available in `df`. Do NOT reference them.
 
 FINANCIAL COST MODEL TO MAXIMIZE NET SAVINGS:
-- Catching an RTO fraud saves ₹250 in logistics/restocking loss.
-- Wrongly blocking a genuine order burns 15% of its order value (blocking a ₹5,000 order loses ₹750!).
-- To achieve high positive Net Financial Savings (₹), rules MUST be high-precision (combine multiple specific risk signals, e.g. COD mode + high pincode RTO rate + first-time buyer, and avoid over-blocking expensive orders without strong evidence).
+- Catching an RTO fraud saves Rs.250 in logistics/restocking loss.
+- Wrongly blocking a genuine order burns 15% of its order value.
+- CRITICAL MATH: For a rule with precision P flagging N orders with average order value V:
+  Net Savings = N * (P * 250 - (1-P) * 0.15 * V)
+  EXAMPLE: Flagging orders where order_value > 1000 (avg ~Rs.2000) with only 34% precision:
+    Net = (0.34 * 250) - (0.66 * 0.15 * 2000) = 85 - 198 = -Rs.113 per flagged order = LOSS!
+  EXAMPLE: Flagging orders where order_value <= 600 (avg ~Rs.400) with only 34% precision:
+    Net = (0.34 * 250) - (0.66 * 0.15 * 400) = 85 - 40 = +Rs.45 per flagged order = PROFIT!
+- CONCLUSION: Prefer rules with UPPER BOUNDS on order_value (e.g. order_value <= 800 or <= 1500) to keep false alarm cost low. Avoid rules that only flag high-value orders without extremely high (>70%) precision.
 
 RULE COMPLEXITY & COVERAGE GUIDELINES:
-- An ideal fraud rule combines 2 to 3 synergistic signals (e.g. `(df['payment_mode'] == 'COD') & (df['pincode_rolling_rto_rate'] > 0.30) & (df['customer_prior_orders'] == 0)` or `(df['device_order_count_24h'] >= 3) & (df['promo_code_used'] == True)`).
-- Aim for balanced coverage: A viable rule should flag 50 to 800 orders (1% to 15% recall) with 35%–65% precision.
+- An ideal fraud rule combines 2 to 3 synergistic signals (e.g. `(df['payment_mode'] == 'COD') & (df['pincode_rolling_rto_rate'] > 0.30) & (df['customer_prior_orders'] == 0)` or `(df['is_first_time_customer'] == 1) & (df['pincode_rolling_rto_rate'] > 0.35) & (df['order_value'] <= 1200)`).
+- Aim for balanced coverage: A viable rule should flag 50 to 800 orders (1% to 15% recall) with 35%-65% precision.
 - Avoid ultra-narrow rules with 5+ strict AND conditions that match fewer than 10 orders.
 
 OUTPUT FORMAT:

@@ -8,7 +8,7 @@ import pandas as pd
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from app.core.llm import get_llm_client
+from app.core.llm import get_llm_client, extract_response_text
 from app.core.sandbox import validate_rule_code, execute_rule_sandboxed
 from app.agents.prompts import GENERATOR_SYSTEM_PROMPT
 from app.agents.repair import repair_rule_code
@@ -27,6 +27,7 @@ class HypothesisGenerator:
         notepad_summary: str = "",
         generation_round: int = 1,
         df_sample: Optional[pd.DataFrame] = None,
+        miss_agenda: Optional[str] = None,
     ) -> List[RuleHypothesis]:
         """Proposes N new executable fraud hypotheses.
         
@@ -35,13 +36,18 @@ class HypothesisGenerator:
             notepad_summary: Memory summary of past successes and failures.
             generation_round: Current round number.
             df_sample: Optional sample dataframe for validation & repair.
+            miss_agenda: Optional targeted agenda from ResidualMiner.
             
         Returns:
             List[RuleHypothesis]: Validated candidate rule hypotheses.
         """
+        targeted_section = ""
+        if miss_agenda:
+            targeted_section = f"\n\nRESIDUAL MINER TARGETED AGENDA:\n{miss_agenda}\nFocus your rules on capturing this specific missed abuse pattern without over-flagging genuine customers."
+
         user_prompt = f"""Generation Round: {generation_round}
 
-{notepad_summary}
+{notepad_summary}{targeted_section}
 
 TASK:
 You are analyzing Indian e-commerce COD (Cash on Delivery) order data where some orders result in RTO — Return-To-Origin. RTO occurs when a package is shipped but never delivered: the customer refuses, is absent, or the order was fraudulent. Each undelivered COD order causes direct logistics and restocking loss.
@@ -60,7 +66,7 @@ Respond with a JSON array containing {n_hypotheses} rule objects.
 
         try:
             response = self.llm.invoke(messages)
-            raw_content = response.content
+            raw_content = extract_response_text(response)
         except Exception as e:
             print(f"[Generator] LLM invocation failed: {e}")
             return []
@@ -119,8 +125,8 @@ Respond with a JSON array containing {n_hypotheses} rule objects.
 
     def _parse_json_response(self, text: str) -> List[dict]:
         """Robust parser for LLM JSON arrays and single objects."""
-        if "<think>" in text and "</think>" in text:
-            text = text.split("</think>", 1)[1].strip()
+        # Note: think-tag stripping and Gemini list-content normalization
+        # is handled upstream in extract_response_text(). Input is plain text.
 
         # Sanitize unicode quotes
         text = (

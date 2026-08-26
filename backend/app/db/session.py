@@ -1,6 +1,7 @@
 """Database engine and session management for PostgreSQL."""
 
 import os
+from pathlib import Path
 from typing import Generator, Optional
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
@@ -20,15 +21,32 @@ _SessionFactory = None
 
 
 def get_engine():
-    """Initializes and returns the singleton SQLAlchemy engine."""
+    """Initializes and returns the singleton SQLAlchemy engine (with automatic SQLite fallback)."""
     global _engine
     if _engine is None:
-        _engine = create_engine(
-            DATABASE_URL,
-            pool_pre_ping=True,
-            pool_size=10,
-            max_overflow=20,
-        )
+        # Try PostgreSQL if configured
+        if DATABASE_URL and "postgresql" in DATABASE_URL:
+            try:
+                test_engine = create_engine(
+                    DATABASE_URL,
+                    pool_pre_ping=True,
+                    pool_size=5,
+                    connect_args={"connect_timeout": 1},
+                )
+                with test_engine.connect() as conn:
+                    conn.execute(text("SELECT 1"))
+                _engine = test_engine
+            except Exception:
+                # PostgreSQL offline -> fallback seamlessly to SQLite
+                sqlite_path = Path(__file__).resolve().parent.parent.parent / "aegis_rto.db"
+                _engine = create_engine(
+                    f"sqlite:///{sqlite_path}",
+                    connect_args={"check_same_thread": False},
+                )
+                Base.metadata.create_all(bind=_engine)
+        else:
+            _engine = create_engine(DATABASE_URL)
+            Base.metadata.create_all(bind=_engine)
     return _engine
 
 

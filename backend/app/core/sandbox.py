@@ -179,8 +179,11 @@ def execute_rule_sandboxed(
         else:
             target_func = execution_env[entry_point]
 
+        from app.data.schema import sanitize_features
+        df_clean = sanitize_features(df_features)
+
         try:
-            raw_result = target_func(df_features.copy())
+            raw_result = target_func(df_clean.copy())
         except Exception as e:
             raise RuleExecutionError(f"Runtime error during rule execution: {str(e)}") from e
 

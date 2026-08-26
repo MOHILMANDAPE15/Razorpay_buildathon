@@ -4,20 +4,20 @@
   "optimal_threshold": 0.64625,
   "performance_train_pre_drift": {
     "total_orders": 10807,
-    "precision": 0.7493,
-    "recall": 0.2969,
-    "f1_score": 0.4252,
-    "avoided_rto_loss_inr": 192000.0,
-    "false_positive_insult_cost_inr": 98304.82,
-    "net_financial_savings_inr": 93695.18
+    "precision": 0.7611,
+    "recall": 0.3054,
+    "f1_score": 0.4359,
+    "avoided_rto_loss_inr": 197500.0,
+    "false_positive_insult_cost_inr": 94819.41,
+    "net_financial_savings_inr": 102680.59
   },
   "performance_validation_drift": {
     "total_orders": 3885,
-    "precision": 0.4589,
-    "recall": 0.1713,
-    "f1_score": 0.2495,
-    "avoided_rto_loss_inr": 47500.0,
-    "false_positive_insult_cost_inr": 73326.86,
-    "net_financial_savings_inr": -25826.86
+    "precision": 0.4382,
+    "recall": 0.1821,
+    "f1_score": 0.2573,
+    "avoided_rto_loss_inr": 50500.0,
+    "false_positive_insult_cost_inr": 77988.65,
+    "net_financial_savings_inr": -27488.65
   }
 }

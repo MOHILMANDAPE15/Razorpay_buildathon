@@ -12,9 +12,14 @@ class HeldOutTestAlreadyAccessedError(PermissionError):
     pass
 
 
-# Thread-safe atomic flag to enforce single-touch methodology on held_out_test.csv
+from datetime import datetime, timezone
+import hashlib
+import os
+
+# Thread-safe and persistent disk lock to enforce single-touch methodology on held_out_test.csv
 _HELD_OUT_LOCK = threading.Lock()
 _HELD_OUT_TEST_ACCESSED: bool = False
+_LOCK_FILE_PATH = data_paths.train_path.parent / ".held_out_test.lock"
 
 
 def reset_held_out_access_guard_for_testing() -> None:
@@ -22,12 +27,17 @@ def reset_held_out_access_guard_for_testing() -> None:
     global _HELD_OUT_TEST_ACCESSED
     with _HELD_OUT_LOCK:
         _HELD_OUT_TEST_ACCESSED = False
+        if _LOCK_FILE_PATH.exists():
+            try:
+                _LOCK_FILE_PATH.unlink()
+            except OSError:
+                pass
 
 
 def is_held_out_test_accessed() -> bool:
-    """Returns whether the held_out_test set has already been accessed in this runtime."""
+    """Returns whether the held_out_test set has already been accessed in this runtime or previously locked on disk."""
     with _HELD_OUT_LOCK:
-        return _HELD_OUT_TEST_ACCESSED
+        return _HELD_OUT_TEST_ACCESSED or _LOCK_FILE_PATH.exists()
 
 
 def load_train_data() -> pd.DataFrame:
@@ -94,13 +104,22 @@ def evaluate_on_held_out_test(
     global _HELD_OUT_TEST_ACCESSED
 
     with _HELD_OUT_LOCK:
-        if _HELD_OUT_TEST_ACCESSED:
+        if _HELD_OUT_TEST_ACCESSED or _LOCK_FILE_PATH.exists():
+            lock_info = _LOCK_FILE_PATH.read_text(encoding="utf-8") if _LOCK_FILE_PATH.exists() else "in-memory session flag"
             raise HeldOutTestAlreadyAccessedError(
-                "CRITICAL VIOLATION: 'orders_held_out_test' dataset has already been accessed in this session. "
+                f"CRITICAL VIOLATION: 'orders_held_out_test' dataset has already been accessed and locked on disk. "
+                f"Lock info: {lock_info}. "
                 "Per the track methodology, held-out test data can only be evaluated strictly once "
                 "after the final ensemble is frozen."
             )
         _HELD_OUT_TEST_ACCESSED = True
+        try:
+            _LOCK_FILE_PATH.write_text(
+                f"Locked at: {datetime.now(timezone.utc).isoformat()} | PID: {os.getpid()}",
+                encoding="utf-8",
+            )
+        except OSError:
+            pass
 
     from app.db.session import check_db_connection, get_engine
     if check_db_connection():

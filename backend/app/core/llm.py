@@ -1,7 +1,7 @@
-"""LLM Provider abstraction using LangChain and Groq API.
+"""LLM Provider abstraction supporting Groq, Gemini, OpenAI, and Anthropic.
 
-Configured for high-throughput hypothesis generation and reflection using
-fast open-weight models (e.g. openai/gpt-oss-120b, llama-3.3-70b-versatile).
+Provider selected via LLM_PROVIDER env var. Default: groq.
+Supported: groq, gemini, openai, anthropic.
 """
 
 import os
@@ -18,12 +18,22 @@ def get_llm_client(
     max_tokens: int = 4096,
 ) -> BaseChatModel:
     """Instantiates a LangChain Chat model client based on environment variables.
-    
-    Defaults to Groq with openai/gpt-oss-120b or llama-3.3-70b-versatile.
+
+    Provider priority: LLM_PROVIDER env var (groq | gemini | openai | anthropic).
     """
     provider = os.getenv("LLM_PROVIDER", "groq").lower()
     groq_api_key = os.getenv("GROQ_API_KEY", "")
+    gemini_api_key = os.getenv("GEMINI_API_KEY", "")
     target_model = model_name or os.getenv("DEFAULT_LLM_MODEL", "openai/gpt-oss-120b")
+
+    if provider == "gemini" and gemini_api_key:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        return ChatGoogleGenerativeAI(
+            model=target_model,
+            google_api_key=gemini_api_key,
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+        )
 
     if provider == "groq" or groq_api_key:
         from langchain_groq import ChatGroq
@@ -55,3 +65,34 @@ def get_llm_client(
     raise ValueError(
         f"Unsupported LLM provider '{provider}' or missing GROQ_API_KEY."
     )
+
+
+def extract_response_text(response) -> str:
+    """Normalizes LLM response content to a plain string.
+
+    Handles:
+    - Gemini 3.6 Flash: content is a list of dicts [{'type':'text','text':'...'}]
+    - Qwen/Groq: content is a string, may contain <think>...</think> blocks
+    - Standard string responses
+
+    Returns:
+        Plain text string with thinking blocks stripped.
+    """
+    content = response.content
+
+    # Gemini thinking model: content is a list of parts
+    if isinstance(content, list):
+        text_parts = [
+            p.get("text", "") for p in content
+            if isinstance(p, dict) and p.get("type") == "text"
+        ]
+        content = " ".join(text_parts).strip()
+
+    # Ensure string
+    content = str(content)
+
+    # Strip Qwen/DeepSeek thinking blocks
+    if "<think>" in content and "</think>" in content:
+        content = content.split("</think>", 1)[1].strip()
+
+    return content

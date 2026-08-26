@@ -1,6 +1,6 @@
 """Data schema definitions, column whitelisting, and no-leakage feature sanitization."""
 
-from typing import Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 import numpy as np
 import pandas as pd
 
@@ -73,11 +73,29 @@ BLINDED_COLUMN_MAP: Dict[str, str] = {
 BLINDED_COLUMN_REVERSE_MAP: Dict[str, str] = {v: k for k, v in BLINDED_COLUMN_MAP.items()}
 
 
+DEFAULT_FEATURE_VALUES: Dict[str, Any] = {
+    "is_first_time_customer": False,
+    "customer_account_age_days": 30,
+    "customer_prior_orders": 1,
+    "payment_mode": "Prepaid",
+    "order_value": 500.0,
+    "item_category": "general",
+    "pincode": "110001",
+    "pincode_rolling_rto_rate": 0.20,
+    "promo_code_used": False,
+    "device_id": "DEV_DEFAULT",
+    "device_order_count_24h": 1,
+    "order_hour": 12,
+    "device_model_name": "Standard",
+    "app_theme_color": "light",
+}
+
+
 def sanitize_features(df: pd.DataFrame) -> pd.DataFrame:
     """Strips forbidden columns and returns a feature-only copy of the DataFrame.
 
     Guarantees that hypothesis functions cannot access 'phase', 'drift_weight',
-    or the target label 'is_rto'.
+    or the target label 'is_rto', and fills safe neutral defaults for any missing features.
 
     Args:
         df: Input DataFrame containing raw dataset columns.
@@ -91,6 +109,11 @@ def sanitize_features(df: pd.DataFrame) -> pd.DataFrame:
     cols_to_drop = [col for col in clean_df.columns if col in FORBIDDEN_COLUMNS]
     if cols_to_drop:
         clean_df = clean_df.drop(columns=cols_to_drop)
+
+    # Ensure all standard features exist with neutral defaults if omitted in streaming payload
+    for col, default_val in DEFAULT_FEATURE_VALUES.items():
+        if col not in clean_df.columns:
+            clean_df[col] = default_val
 
     return clean_df
 

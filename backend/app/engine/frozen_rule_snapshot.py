@@ -143,6 +143,15 @@ class FrozenRuleEnsemble:
         )
 
 
+def load_frozen_v1_rules(prefer_live: bool = True) -> List[RuleHypothesis]:
+    """Helper to retrieve frozen v1 rule hypotheses list."""
+    path = LIVE_SNAPSHOT_PATH if (prefer_live and LIVE_SNAPSHOT_PATH.exists()) else MOCK_SNAPSHOT_PATH
+    if not path.exists():
+        # Fallback to mock seed if neither exists yet
+        return [RuleHypothesis(**_MOCK_SEED_RULE)]
+    return FrozenRuleEnsemble(path).load().rules
+
+
 # ---------------------------------------------------------------------------
 # Snapshot Generation
 # ---------------------------------------------------------------------------
@@ -254,13 +263,13 @@ def _generate_live_snapshot(n_rounds: int, hypotheses_per_round: int) -> Dict[st
         print(f"\n[FrozenSnapshot LIVE] === Round {r}/{n_rounds} ===")
         pre_drift_guidance = (
             "PRE-DRIFT BASELINE RULES (Orders Train Only, Days 0-55):\n"
-            "- Target authentic pre-drift causal fraud signals: high historical pincode RTO rate "
-            "(`pincode_rolling_rto_rate >= 0.40`), `payment_mode == 'COD'`, and new/first-time customers "
-            "(`is_first_time_customer == True` or `customer_prior_orders <= 1`).\n"
-            "- IMPORTANT FINANCIAL OPTIMIZATION: Filter for modest order values (`order_value <= 1000` or `<= 1500`) "
-            "to minimize false alarm margin loss (15% of order value) and ensure strongly positive net savings (INR).\n"
-            "- STRICT COMPARISON CONSTRAINT: Do NOT use `promo_code_used`, `device_order_count_24h`, or late-night "
-            "`order_hour` (these are reserved for concept drift in post-day-55 validation)."
+            "- Discover fraud patterns present in the historical training data (Days 0-55) by reasoning "
+            "over available signals: payment mode, pincode RTO history, customer account age, prior order counts, "
+            "order value, item category, and device/session features.\n"
+            "- Optimize net financial savings (INR): catching an RTO saves Rs. 250, but a false alarm costs 15%% "
+            "of order value (lost merchant margin). Reason about the trade-off when choosing thresholds.\n"
+            "- STRICT METHODOLOGICAL CONSTRAINT: Do NOT use `promo_code_used`, `device_order_count_24h`, or "
+            "`order_hour` — these columns are held out as post-drift signals and must not appear in pre-drift rules."
         )
         candidates = generator.generate_hypotheses(
             n_hypotheses=hypotheses_per_round,
@@ -300,33 +309,8 @@ def _generate_live_snapshot(n_rounds: int, hypotheses_per_round: int) -> Dict[st
                             f"Rs. {mut_report.cost_metrics.net_financial_savings_inr:,.2f}"
                         )
 
-    # Ensure baseline pre-drift rule is present in candidate pool
-    baseline_fallback = RuleHypothesis(
-        id="hyp_v1_pincode_cod_baseline",
-        name="Pre-drift High-Risk Pincode COD with Value Cap",
-        code=(
-            "import pandas as pd\n\n"
-            "def predict(df: pd.DataFrame):\n"
-            "    # Authentic Pre-drift Baseline Rule:\n"
-            "    # Targets high historical pincode RTO rate on COD orders for first-time customers\n"
-            "    # with modest order value (minimizing false alarm merchant margin insult).\n"
-            "    return (\n"
-            "        (df['payment_mode'] == 'COD') &\n"
-            "        (df['pincode_rolling_rto_rate'] >= 0.40) &\n"
-            "        (df['is_first_time_customer'] == True) &\n"
-            "        (df['order_value'] <= 1000)\n"
-            "    )"
-        ),
-        description="Pre-drift baseline rule evolved on orders_train targeting high historical pincode RTO on COD first-time orders.",
-        rationale="Prior to drift, fraud concentrated in known high-risk pincodes with COD payment from first-time users.",
-        target_signal="pincode_cod_first_time",
-        generation_round=1,
-        status="alive",
-    )
-    notepad.add_hypothesis(baseline_fallback)
-    evaluator.evaluate_hypothesis(baseline_fallback, df_train)
-
-    # Select optimal ensemble from train performance
+    # Select optimal ensemble from train performance — NO seeded/hand-authored rules added here.
+    # The full candidate pool comes exclusively from the Generator → Reflector loop above.
     all_candidates = notepad.get_all_hypotheses()
     print(f"\n[FrozenSnapshot LIVE] Selecting ensemble from {len(all_candidates)} candidates...")
     result = selector.select_ensemble(all_candidates, df_train, max_ensemble_size=4, min_marginal_gain_inr=50.0)

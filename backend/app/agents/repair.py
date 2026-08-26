@@ -7,17 +7,15 @@ import pandas as pd
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from app.core.llm import get_llm_client
+from app.core.llm import get_llm_client, extract_response_text
 from app.core.sandbox import execute_rule_sandboxed, validate_rule_code
 from app.agents.prompts import REPAIR_SYSTEM_PROMPT
 
 
 def _extract_code_from_response(text: str) -> Tuple[str, str]:
-    """Extracts python code and explanation from JSON or markdown code blocks."""
-    # Remove Qwen/DeepSeek thinking blocks if present
-    if "<think>" in text and "</think>" in text:
-        text = text.split("</think>", 1)[1].strip()
-
+    """Extracts python code and explanation from JSON or markdown code blocks.
+    Note: think-tag stripping and Gemini list-content handled upstream by extract_response_text().
+    """
     # Sanitize unicode
     text = (
         text.replace("\u2011", "-")
@@ -108,7 +106,7 @@ Ensure it defines `def predict(df: pd.DataFrame)` returning boolean / 0-1 array.
 
     try:
         response = model.invoke(messages)
-        repaired_code, explanation = _extract_code_from_response(response.content)
+        repaired_code, explanation = _extract_code_from_response(extract_response_text(response))
 
         # Validate repaired code
         validate_rule_code(repaired_code)

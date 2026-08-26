@@ -8,7 +8,7 @@ import pandas as pd
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from app.core.llm import get_llm_client
+from app.core.llm import get_llm_client, extract_response_text
 from app.core.sandbox import validate_rule_code, execute_rule_sandboxed
 from app.agents.prompts import REFLECTOR_SYSTEM_PROMPT
 from app.agents.repair import repair_rule_code
@@ -105,7 +105,7 @@ DIAGNOSIS & MUTATION TASK:
 
         try:
             response = self.llm.invoke(messages)
-            raw_content = response.content
+            raw_content = extract_response_text(response)
         except Exception as e:
             print(f"[Reflector] LLM invocation failed: {e}")
             return None
@@ -200,10 +200,9 @@ DIAGNOSIS & MUTATION TASK:
         )
 
     def _parse_json_response(self, text: str) -> Optional[dict]:
-        """Parses reflection JSON output."""
-        if "<think>" in text and "</think>" in text:
-            text = text.split("</think>", 1)[1].strip()
-
+        """Parses reflection JSON output.
+        Note: think-tag stripping handled upstream by extract_response_text().
+        """
         try:
             data = json.loads(text.strip())
             if isinstance(data, dict):

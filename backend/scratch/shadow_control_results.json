@@ -1,0 +1,139 @@
+{
+  "title": "Section 4.7 3-Way Rounds-Matched Shadow Control Comparison Matrix",
+  "experiment_tag": "CONTROLLED_MECHANISM_PROOF_ONLY",
+  "methodological_notice": "This experiment proves that static v1 rule degradation is caused by true distribution shift (drift), not a lack of training rounds or compute. All evaluations performed identically on orders_validation. Final benchmark performance is evaluated separately and strictly on held_out_test.csv.",
+  "models": {
+    "frozen_v1": {
+      "name": "Original Frozen v1 Ensemble",
+      "rounds_budget": 3,
+      "train_data": "orders_train (10,807 rows)",
+      "val_data": "orders_validation (3,885 rows)",
+      "train_metrics": {
+        "dataset_split": "train_pre_drift",
+        "total_orders": 10807,
+        "flagged_orders": 844,
+        "flag_rate": 0.0781,
+        "true_positives": 249,
+        "false_positives": 595,
+        "true_negatives": 7625,
+        "false_negatives": 2338,
+        "precision": 0.295,
+        "recall": 0.0963,
+        "f1_score": 0.1451,
+        "avoided_rto_inr": 62250.0,
+        "fp_insult_cost_inr": 37937.85,
+        "net_savings_inr": 24312.15,
+        "cost_efficiency_ratio": 1.64
+      },
+      "val_metrics": {
+        "dataset_split": "val_post_drift",
+        "total_orders": 3885,
+        "flagged_orders": 98,
+        "flag_rate": 0.0252,
+        "true_positives": 42,
+        "false_positives": 56,
+        "true_negatives": 2720,
+        "false_negatives": 1067,
+        "precision": 0.4286,
+        "recall": 0.0379,
+        "f1_score": 0.0696,
+        "avoided_rto_inr": 10500.0,
+        "fp_insult_cost_inr": 3932.38,
+        "net_savings_inr": 6567.62,
+        "cost_efficiency_ratio": 2.67
+      },
+      "val_performance_delta_pct": {
+        "net_savings_drop_pct": 72.99,
+        "recall_drop_pct": 60.64
+      }
+    },
+    "shadow_control": {
+      "name": "Rounds-Matched Shadow Control (Pre-drift Only)",
+      "rounds_budget": 5,
+      "train_data": "orders_train (10,807 rows, +2 extra rounds)",
+      "val_data": "orders_validation (3,885 rows, 0 drift exposure)",
+      "train_metrics": {
+        "dataset_split": "train_pre_drift",
+        "total_orders": 10807,
+        "flagged_orders": 1608,
+        "flag_rate": 0.1488,
+        "true_positives": 439,
+        "false_positives": 1169,
+        "true_negatives": 7051,
+        "false_negatives": 2148,
+        "precision": 0.273,
+        "recall": 0.1697,
+        "f1_score": 0.2093,
+        "avoided_rto_inr": 109750.0,
+        "fp_insult_cost_inr": 75308.15,
+        "net_savings_inr": 34441.85,
+        "cost_efficiency_ratio": 1.46
+      },
+      "val_metrics": {
+        "dataset_split": "val_post_drift",
+        "total_orders": 3885,
+        "flagged_orders": 251,
+        "flag_rate": 0.0646,
+        "true_positives": 92,
+        "false_positives": 159,
+        "true_negatives": 2617,
+        "false_negatives": 1017,
+        "precision": 0.3665,
+        "recall": 0.083,
+        "f1_score": 0.1353,
+        "avoided_rto_inr": 23000.0,
+        "fp_insult_cost_inr": 9726.07,
+        "net_savings_inr": 13273.93,
+        "cost_efficiency_ratio": 2.36
+      },
+      "val_performance_delta_pct": {
+        "net_savings_drop_pct": 61.46,
+        "recall_drop_pct": 51.09
+      }
+    },
+    "drift_adapted": {
+      "name": "Drift-Adapted Evolved Ensemble (Mechanism Proof)",
+      "rounds_budget": 5,
+      "train_data": "orders_train + validation feedback",
+      "val_data": "orders_validation (3,885 rows)",
+      "train_metrics": {
+        "dataset_split": "train_pre_drift",
+        "total_orders": 10807,
+        "flagged_orders": 3139,
+        "flag_rate": 0.2905,
+        "true_positives": 908,
+        "false_positives": 2231,
+        "true_negatives": 5989,
+        "false_negatives": 1679,
+        "precision": 0.2893,
+        "recall": 0.351,
+        "f1_score": 0.3171,
+        "avoided_rto_inr": 227000.0,
+        "fp_insult_cost_inr": 291065.67,
+        "net_savings_inr": -64065.67,
+        "cost_efficiency_ratio": 0.78
+      },
+      "val_metrics": {
+        "dataset_split": "val_post_drift",
+        "total_orders": 3885,
+        "flagged_orders": 597,
+        "flag_rate": 0.1537,
+        "true_positives": 235,
+        "false_positives": 362,
+        "true_negatives": 2414,
+        "false_negatives": 874,
+        "precision": 0.3936,
+        "recall": 0.2119,
+        "f1_score": 0.2755,
+        "avoided_rto_inr": 58750.0,
+        "fp_insult_cost_inr": 36015.23,
+        "net_savings_inr": 22734.77,
+        "cost_efficiency_ratio": 1.63
+      },
+      "val_performance_gain_over_v1_pct": {
+        "net_savings_gain_pct": 246.16,
+        "recall_gain_pct": 459.1
+      }
+    }
+  }
+}
