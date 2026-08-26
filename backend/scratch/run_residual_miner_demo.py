@@ -50,6 +50,10 @@ def main():
     print(f"    -> Realized False Negatives:      {report.total_false_negatives:,} unflagged RTO losses")
     print(f"    -> False Negative Rate:           {report.false_negative_rate * 100:.1f}%")
     print(f"    -> Miss Clusters Discovered:      {len(report.clusters_identified)}")
+    print(f"    -> Insignificant Candidates Filtered: {len(report.rejected_insignificant_clusters)}")
+    if report.rejected_insignificant_clusters:
+        for rej in report.rejected_insignificant_clusters:
+            print(f"       * [{rej.cluster_name}] Rejected: {rej.rejection_reason}")
 
     # 3. Inspect top discovered miss cluster
     if not report.clusters_identified:
@@ -104,7 +108,7 @@ def main():
     print(f"    Full-Validation Precision:       {verdict['full_validation_precision'] * 100:.2f}%")
     print(f"    Full-Validation Recall:          {verdict['full_validation_recall'] * 100:.2f}%")
     print(f"    True Positives Caught:           {verdict['full_validation_tp']}")
-    print(f"    False Positives Insulted:        {verdict['full_validation_fp']}")
+    print(f"    False Positives Incurred:        {verdict['full_validation_fp']}")
     print(f"\n    FINAL GATE VERDICT:              [{verdict['verdict']}]")
     print(f"    Decision Reason:                 {verdict['reasons'][0]}")
     print("=" * 75)
@@ -112,3 +116,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

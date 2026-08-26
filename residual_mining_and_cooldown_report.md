@@ -127,7 +127,7 @@ def predict(df):
     Full-Validation Precision:       43.43%
     Full-Validation Recall:          3.88%
     True Positives Caught:           43
-    False Positives Insulted:        56
+    False Positives Incurred:        56
 
     FINAL GATE VERDICT:              [PROMOTED]
     Decision Reason:                 ACCEPTED: Targeted rule added +Rs. 250.00 net financial savings on full validation (TP=43, FP=56, Net=Rs. 6,817.62).

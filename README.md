@@ -4,7 +4,7 @@
 > 
 > *An autonomous, self-evolving fraud defense system that discovers, validates, and refines executable Python fraud detection rules in response to shifting adversarial tactics and Return-to-Origin (RTO) / Cash-on-Delivery (COD) abuse.*
 
-[![Tests](https://img.shields.io/badge/Tests-63%2F63%20Passing-emerald?style=for-the-badge&logo=pytest)](file:///c:/Users/Dell/Razorpay_buildathon/backend/tests)
+[![Tests](https://img.shields.io/badge/Tests-65%2F65%20Passing-emerald?style=for-the-badge&logo=pytest)](file:///c:/Users/Dell/Razorpay_buildathon/backend/tests)
 [![Track](https://img.shields.io/badge/Track%202-AI%20Risk%20Manager-indigo?style=for-the-badge)](https://razorpay.com/buildathon)
 [![Policy](https://img.shields.io/badge/Policy-100%25%20Defense--Only-blue?style=for-the-badge)](file:///c:/Users/Dell/Razorpay_buildathon/backend/app/engine/defense_audit.py)
 [![Inference](https://img.shields.io/badge/Inference-Sub--Millisecond-purple?style=for-the-badge)](file:///c:/Users/Dell/Razorpay_buildathon/backend/app/core/sandbox.py)
@@ -255,8 +255,12 @@ python -m pytest backend/tests/ -v
 # Run the live Residual Miner execution demo
 python backend/scratch/run_residual_miner_demo.py
 
+# Run the Dynamic Discovery Novelty Verification (Matched vs Novel Clusters)
+python backend/scratch/verify_dynamic_discovery_novelty.py
+
 # Run the 3-way rounds-matched shadow control matrix
 python backend/scratch/run_shadow_control.py
+
 ```
 
 ---

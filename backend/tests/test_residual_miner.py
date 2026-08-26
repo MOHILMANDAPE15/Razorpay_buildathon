@@ -277,3 +277,48 @@ def test_cluster_cooldown_suppression_and_50pct_surge_bypass(sample_orders_df, m
     surged_ids = [c.cluster_id for c in report_r2_surge.clusters_identified]
     assert cluster_id in surged_ids
     assert miner._cooldown_registry[cluster_id]["status"] == "BYPASSED_SURGE"
+
+
+def test_significance_guard_populates_rejected_clusters(sample_orders_df, mock_incumbent_ensemble):
+    """Verifies that rejected_insignificant_clusters is populated when a subgroup fails significance/cohort thresholds."""
+    # Set min_cohort_size high (e.g. 60) so some subgroups are rejected due to small cohort
+    miner = ResidualMiner(
+        maturity_window_days=0,
+        min_cluster_size=5,
+        min_cohort_size=60,  # High threshold triggers rejections
+        significance_alpha=0.05,
+    )
+    report = miner.run_residual_analysis(
+        sample_orders_df, mock_incumbent_ensemble, current_day_index=9
+    )
+
+    assert len(report.rejected_insignificant_clusters) > 0
+    rejected_sample = report.rejected_insignificant_clusters[0]
+    assert isinstance(rejected_sample, RejectedClusterCandidate)
+    assert len(rejected_sample.cluster_name) > 0
+    assert "below minimum threshold" in rejected_sample.rejection_reason or "Failed significance check" in rejected_sample.rejection_reason
+
+
+def test_dynamic_discovery_novelty_finds_unseen_patterns():
+    """Verifies that dynamic subgroup mining discovers novel patterns beyond static handcoded baselines."""
+    from app.data.loader import load_validation_data
+    from app.engine.frozen_rule_snapshot import load_frozen_v1_rules
+
+    df_val = load_validation_data()
+    v1_rules = load_frozen_v1_rules()
+    incumbent = EnsembleRule(v1_rules)
+
+    miner = ResidualMiner(
+        maturity_window_days=5,
+        min_cluster_size=10,
+        min_cohort_size=30,
+        mode="dynamic",
+    )
+    report = miner.run_residual_analysis(df_val, incumbent, current_day_index=int(df_val["day_index"].max()))
+
+    discovered_ids = [c.cluster_id for c in report.clusters_identified]
+    assert len(discovered_ids) >= 1
+
+    # Check for presence of dynamically discovered new account cluster
+    assert "cluster_dyn_new_account_high_val_cod" in discovered_ids or "cluster_dyn_promo_cod_velocity" in discovered_ids
+
