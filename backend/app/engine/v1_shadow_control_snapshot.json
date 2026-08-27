@@ -1,0 +1,23 @@
+{
+  "model_id": "shadow_control_v1",
+  "model_name": "Rounds-Matched Shadow Control (Pre-Drift Only)",
+  "total_rounds": 5,
+  "training_data_window": "Days 0-55 (orders_train, 10,807 rows)",
+  "drift_exposure": "None (0% exposure to Days 56-75)",
+  "selected_rules": [
+    {
+      "id": "hyp_shadow_r4_01",
+      "name": "Low-Value COD New Customer Defense (Pre-Drift Round 4)",
+      "description": "Extended pre-drift exploration on low-value COD orders from new accounts with age <= 30 days.",
+      "code": "def predict(df):\n    return (\n        (df['payment_mode'] == 'COD') &\n        (df['customer_account_age_days'] <= 30) &\n        (df['pincode_rolling_rto_rate'] >= 0.26) &\n        (df['order_value'] <= 600)\n    )",
+      "generation_round": 4
+    },
+    {
+      "id": "hyp_shadow_r5_02",
+      "name": "Apparel & High-Risk Regional COD Defense (Pre-Drift Round 5)",
+      "description": "Extended pre-drift exploration targeting fashion and high-RTO regional pockets.",
+      "code": "def predict(df):\n    return (\n        (df['payment_mode'] == 'COD') &\n        (df['customer_prior_orders'] == 0) &\n        (df['item_category'].isin(['fashion', 'beauty'])) &\n        (df['pincode_rolling_rto_rate'] >= 0.28) &\n        (df['order_value'] <= 1000)\n    )",
+      "generation_round": 5
+    }
+  ]
+}
