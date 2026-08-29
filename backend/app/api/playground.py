@@ -297,13 +297,28 @@ def explain_order_decision(payload: ExplainRequest):
     is_rto = int(payload.ground_truth.get("is_rto", 0))
     gt_label = "RTO (Buyer refused/returned order)" if is_rto == 1 else "DELIVERED (Successful delivery)"
 
+    miss_rule = (
+        '3. CRITICAL: For this HARD-tier miss, explicitly frame the explanation as: '
+        '"this is an intentionally hard case representing the adaptation gap this system is designed to close over time" '
+        'rather than a bare system failure.\n'
+        if payload.outcome_classification == 'FALSE_NEGATIVE_MISS'
+        else ''
+    )
+    fp_rule = (
+        '3. CRITICAL: For this FALSE POSITIVE case, explicitly frame the explanation around the honest cost-tradeoff: '
+        'the order triggered risk heuristics resulting in an auto-block, incurring a 15% merchant gross margin loss insult cost, '
+        'illustrating why high precision (T=0.70) is economically vital.\n'
+        if payload.outcome_classification == 'FALSE_POSITIVE_INSULT'
+        else ''
+    )
+
     prompt = (
         f"You are the Aegis-RTO Explanation Agent. Provide a concise (2-3 sentences), highly factual explanation for how and why Aegis routed this order.\n\n"
         f"STRICT GROUNDING RULES:\n"
         f"1. Reason ONLY using the provided order features, matched rule(s), routing decision, and ground truth below. Do not invent details.\n"
         f"2. Reference key numeric values (e.g. order value, payment mode, account age, risk score) that justified the outcome.\n"
-        f"{'3. CRITICAL: For this HARD-tier miss, explicitly frame the explanation as: \"this is an intentionally hard case representing the adaptation gap this system is designed to close over time\" rather than a bare system failure.' if payload.outcome_classification == 'FALSE_NEGATIVE_MISS' else ''}\n"
-        f"{'3. CRITICAL: For this FALSE POSITIVE case, explicitly frame the explanation around the honest cost-tradeoff: the order triggered risk heuristics resulting in an auto-block, incurring a 15% merchant gross margin loss insult cost, illustrating why high precision (T=0.70) is economically vital.' if payload.outcome_classification == 'FALSE_POSITIVE_INSULT' else ''}\n\n"
+        f"{miss_rule}"
+        f"{fp_rule}\n"
         f"ORDER CONTEXT:\n"
         f"- Order ID: {payload.order_id}\n"
         f"- Difficulty Tier: {payload.tier.upper()}\n"
