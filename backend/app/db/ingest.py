@@ -16,7 +16,7 @@ from app.db.session import Base, get_engine
 from app.db.models import OrderTrain, OrderValidation, OrderHeldOutTest
 
 
-def init_db(engine=None, reset_order_tables: bool = True):
+def init_db(engine=None, reset_order_tables: bool = False):
     """Creates all database tables defined in SQLAlchemy models."""
     db_engine = engine or get_engine()
     print("[DB] Initializing database tables...")
@@ -63,10 +63,10 @@ def ingest_split_csv(csv_path: Path, table_name: str, default_phase: str, defaul
     return len(df)
 
 
-def ingest_all_datasets(engine=None):
+def ingest_all_datasets(engine=None, reset_tables: bool = False):
     """Ingests train.csv, validation.csv, and held_out_test.csv into their respective isolated tables."""
     db_engine = engine or get_engine()
-    init_db(db_engine)
+    init_db(db_engine, reset_order_tables=reset_tables)
 
     print("\n[DB Ingestion] Starting dataset population into isolated tables...")
     train_count = ingest_split_csv(
@@ -99,6 +99,9 @@ def ingest_all_datasets(engine=None):
         "orders_held_out_test": test_count,
         "total": total,
     }
+
+
+ingest_all_splits = ingest_all_datasets
 
 
 if __name__ == "__main__":
