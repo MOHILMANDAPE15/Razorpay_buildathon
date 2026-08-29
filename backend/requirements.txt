@@ -20,7 +20,13 @@ psycopg2-binary>=2.9.9
 sqlalchemy>=2.0.30
 asyncpg>=0.29.0
 
-# LLM Providers (for Generator / Reflector / Defense-Only Audit)
+# LLM Providers & LangChain Framework
+groq>=0.11.0
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-groq>=0.1.0
+langchain-google-genai>=1.0.0
+langchain-openai>=0.1.0
 anthropic>=0.34.0
 google-genai>=1.0.0
 openai>=1.40.0
