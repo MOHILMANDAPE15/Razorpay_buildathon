@@ -139,7 +139,12 @@ def get_latest_residual_scan(
             )
 
             # Determine cooldown status
-            cooldown_record = db.query(MissClusterCooldown).filter_by(cluster_id=c.cluster_id).first()
+            cooldown_record = None
+            try:
+                cooldown_record = db.query(MissClusterCooldown).filter_by(cluster_id=c.cluster_id).first()
+            except Exception:
+                cooldown_record = None
+
             status = "significant"
             cooldown_until = current_round
             last_miss = c.miss_count
