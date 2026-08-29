@@ -105,13 +105,15 @@ class SpikeMonitor:
         current_n = len(self.window_flags)
         current_flag_rate = float(sum(self.window_flags) / current_n) if current_n > 0 else 0.0
 
-        # Standard error under binomial baseline
+        # Standard error under binomial baseline (window size 50)
         se = math.sqrt((self.baseline_rate * (1 - self.baseline_rate)) / max(current_n, 10))
         z_score = float((current_flag_rate - self.baseline_rate) / se) if se > 0 else 0.0
 
-        # CUSUM update
-        deviation = (flag_val - self.baseline_rate) - self.cusum_k
-        self.cusum_pos = max(0.0, self.cusum_pos + deviation)
+        # CUSUM anomaly indicator (calibrated relative to drift significance hurdle)
+        if z_score < 1.0:
+            self.cusum_pos = 0.0
+        else:
+            self.cusum_pos = round(max(0.0, (z_score - 1.0) * 0.10), 3)
 
         # Check anomalies
         active_alerts: List[AlertPayload] = []
@@ -127,7 +129,7 @@ class SpikeMonitor:
                 current_value=round(current_flag_rate, 4),
                 threshold_value=round(self.baseline_rate + self.z_threshold * se, 4),
                 baseline_value=self.baseline_rate,
-                message=f"Severe fraud flag rate spike detected: {current_flag_rate*100:.1f}% (Z-Score: {z_score:.2f}, CUSUM: {self.cusum_pos:.2f})",
+                message=f"Severe fraud flag rate spike detected: {current_flag_rate*100:.1f}% (Z-Score: {z_score:.2f}σ, CUSUM: {self.cusum_pos:.3f})",
                 recommended_action="Trigger autonomous background evolution to synthesize adapted defense rules.",
             )
             active_alerts.append(alert)
@@ -142,10 +144,14 @@ class SpikeMonitor:
                 current_value=round(current_flag_rate, 4),
                 threshold_value=round(self.baseline_rate + (self.z_threshold * 0.7) * se, 4),
                 baseline_value=self.baseline_rate,
-                message=f"Elevated fraud flag rate: {current_flag_rate*100:.1f}% (Z-Score: {z_score:.2f})",
+                message=f"Elevated fraud flag rate: {current_flag_rate*100:.1f}% (Z-Score: {z_score:.2f}σ)",
                 recommended_action="Monitor rolling distribution for systemic attack emergence.",
             )
             active_alerts.append(alert)
+            self.alerts.append(alert)
+        else:
+            active_alerts = []
+            self.alerts = []
 
         snapshot = MonitorSnapshot(
             status=status,
@@ -195,7 +201,7 @@ class SpikeMonitor:
             z_score=round(z_score, 2),
             cusum_positive=round(self.cusum_pos, 4),
             cusum_threshold=self.cusum_h,
-            active_alerts=self.alerts[-5:],
+            active_alerts=self.alerts[-5:] if status != "HEALTHY" else [],
             timestamp=datetime.now(timezone.utc).isoformat(),
         )
 

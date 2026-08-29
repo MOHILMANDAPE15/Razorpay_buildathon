@@ -203,6 +203,15 @@ class ResidualMiner:
         return round(float(lift), 2), round(float(p_val), 4), is_significant
 
 
+    def format_rejection_reason(self, p_val: float, lift: float) -> str:
+        """Constructs an accurate, internally consistent rejection reason based on actual failing check(s)."""
+        reasons = []
+        if p_val >= self.significance_alpha:
+            reasons.append(f"Failed significance check (p={p_val:.4f} >= {self.significance_alpha})")
+        if lift <= 1.0:
+            reasons.append(f"Rejected: lift {lift:.2f} indicates no elevated risk (baseline or protective pattern), not a fraud signal")
+        return "; ".join(reasons) if reasons else f"Failed guard thresholds (p={p_val:.4f}, lift={lift:.2f})"
+
     def static_fallback_clusters(
         self,
         df_fn: pd.DataFrame,
@@ -270,7 +279,7 @@ class ResidualMiner:
                         miss_count=len(df_promo),
                         lift=lift,
                         p_value=p_val,
-                        rejection_reason=f"Failed significance check (p={p_val} >= {self.significance_alpha})",
+                        rejection_reason=self.format_rejection_reason(p_val, lift),
                     ))
 
         # Pattern 2: Late-Night High-Risk Pincode COD
@@ -322,7 +331,7 @@ class ResidualMiner:
                         miss_count=len(df_late),
                         lift=lift,
                         p_value=p_val,
-                        rejection_reason=f"Failed significance check (p={p_val} >= {self.significance_alpha})",
+                        rejection_reason=self.format_rejection_reason(p_val, lift),
                     ))
 
         # Pattern 3: Low-Value First-Time COD
@@ -374,7 +383,7 @@ class ResidualMiner:
                         miss_count=len(df_low),
                         lift=lift,
                         p_value=p_val,
-                        rejection_reason=f"Failed significance check (p={p_val} >= {self.significance_alpha})",
+                        rejection_reason=self.format_rejection_reason(p_val, lift),
                     ))
 
         return clusters, rejected
@@ -510,7 +519,7 @@ class ResidualMiner:
                     miss_count=fn_count,
                     lift=lift,
                     p_value=p_val,
-                    rejection_reason=f"Failed significance check (p={p_val} >= {self.significance_alpha})",
+                    rejection_reason=self.format_rejection_reason(p_val, lift),
                 ))
 
         clusters.sort(key=lambda c: c.miss_count, reverse=True)

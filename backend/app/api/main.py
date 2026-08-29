@@ -3,8 +3,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.chatbot import router as chatbot_router
 from app.api.lineage import router as lineage_router
 from app.api.monitor import router as monitor_router
+from app.api.playground import router as playground_router
+from app.api.residual_mining import router as residual_mining_router
 from app.api.scoring import scoring_router
 from app.db.session import check_db_connection
 
@@ -24,7 +27,12 @@ app.add_middleware(
 
 app.include_router(lineage_router, prefix="/api/v1")
 app.include_router(monitor_router, prefix="/api/v1")
+app.include_router(residual_mining_router, prefix="/api/v1")
 app.include_router(scoring_router, prefix="/api/v1")
+app.include_router(playground_router, prefix="/api/v1")
+app.include_router(chatbot_router, prefix="/api/v1")
+
+
 
 
 @app.get("/api/v1/health", tags=["System Health"])

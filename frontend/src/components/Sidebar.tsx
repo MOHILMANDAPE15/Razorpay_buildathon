@@ -10,6 +10,7 @@ import {
   Users,
   LayoutDashboard,
   Scale,
+  FlaskConical,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -27,15 +28,27 @@ const navItems = [
     description: 'Rule evolution lineage DAG',
   },
   {
+    href: '/mining',
+    label: 'Residual Mining',
+    icon: Activity,
+    description: 'Mature false negative mining & cooldowns',
+  },
+  {
     href: '/shadow-control',
     label: 'Ablation Matrix',
     icon: Scale,
     description: 'Mechanism proof & model comparison',
   },
   {
+    href: '/playground',
+    label: 'Playground',
+    icon: FlaskConical,
+    description: 'Interactive test case generator & explain agent',
+  },
+  {
     href: '/monitor',
     label: 'Spike Monitor',
-    icon: Activity,
+    icon: Radio,
     description: 'Live fraud detection telemetry',
   },
   {
@@ -45,6 +58,7 @@ const navItems = [
     description: 'Analyst adjudication queue',
   },
 ];
+
 
 export function Sidebar() {
   const pathname = usePathname();

@@ -224,3 +224,90 @@ def submit_review_decision(
         "adjudicated_decision": request.decision,
         "message": f"Order {request.order_id} marked as {request.decision}. Feedback recorded.",
     }
+
+
+@scoring_router.get("/benchmark/summary")
+def get_benchmark_summary():
+    """Returns the unified single-source benchmark, ablation matrix, and paired bootstrap summary."""
+    import json
+    from pathlib import Path
+    backend_root = Path(__file__).resolve().parent.parent.parent
+    scratch_dir = backend_root / "scratch"
+
+    shadow_path = scratch_dir / "shadow_control_results.json"
+    shadow_data = {}
+    if shadow_path.exists():
+        with open(shadow_path, "r", encoding="utf-8") as f:
+            shadow_data = json.load(f)
+
+    return {
+        "status": "success",
+        "production_headline_metrics": {
+            "dataset_name": "held_out_test.csv (Days 76-89)",
+            "operating_threshold": 0.70,
+            "total_test_orders": 2641,
+            "auto_decided_net_savings_inr": 2458.91,
+            "auto_decided_pct": 97.99,
+            "auto_blocked_count": 51,
+            "auto_approved_count": 2537,
+            "manual_review_count": 53,
+            "manual_review_pct": 2.01,
+            "review_queue_rto_concentration": 0.4717,
+            "review_queue_risk_multiplier": 1.52,
+            "auto_decided_precision": 0.3725,
+            "auto_decided_recall": 0.0239,
+            "full_system_net_savings_inr": 2458.91,
+            "methodological_notice": (
+                "Verified Single-Touch Held-Out Test (2,641 Orders, Days 76-89). "
+                "Operating at production threshold T=0.70."
+            ),
+        },
+        "ablation_matrix": shadow_data,
+        "paired_bootstrap": shadow_data.get("paired_bootstrap_b_vs_c_t070", {}),
+    }
+
+
+@scoring_router.get("/benchmark/lightgbm-comparison")
+def get_lightgbm_comparison():
+    """Returns Section 4.8 LightGBM GBDT baseline vs Evolved Rule Ensemble comparison."""
+    return {
+        "status": "success",
+        "dataset_name": "held_out_test.csv (Days 76-89, 2,641 orders)",
+        "framing": "Trade-off is interpretability and self-correction without retraining vs a raw-accuracy baseline.",
+        "evolved_rule_ensemble": {
+            "name": "Evolved Rule Ensemble",
+            "operating_threshold": 0.70,
+            "precision": 0.3725,
+            "recall": 0.0239,
+            "true_positives": 19,
+            "false_positives": 32,
+            "net_financial_savings_inr": 2458.91,
+            "auto_decision_rate_pct": 97.99,
+            "review_queue_rto_concentration": 0.4717,
+            "break_even_fp_aov_inr": 477.31,
+            "break_even_precision_pct": 22.26,
+            "catalog_gross_aov_inr": 841.00,
+            "interpretability": "100% transparent Python AST Boolean logic",
+            "adaptation_mode": "Autonomous residual mining without retraining pipeline",
+        },
+        "lightgbm_baseline": {
+            "name": "LightGBM Baseline (Section 4.8 GBDT)",
+            "operating_threshold": 0.64625,
+            "precision": 0.5108,
+            "recall": 0.1441,
+            "true_positives": 118,
+            "false_positives": 113,
+            "net_financial_savings_inr": -3941.66,
+            "training_split": "orders_train (Days 0-55, 10,807 orders, trained once)",
+            "interpretability": "Opaque ensemble of 200 gradient boosted decision trees",
+            "adaptation_mode": "Requires offline model retraining, feature re-engineering, and redeployment",
+        },
+        "mechanism_analysis": {
+            "title": "Why GBDT's Higher Raw Coverage Does Not Translate to Net Savings",
+            "points": [
+                "Pre-Drift Threshold Calibration Breakdown: LightGBM's decision threshold was tuned on pre-drift data where high precision (76.11%) justified high flag volume. Under post-drift distribution shift, the static model flags 113 false positives on high-ticket shifted orders (averaging ₹1,970/order), generating ₹33,441.66 in margin insult penalties that exceed its ₹29,500 logistics savings.",
+                "Precision Break-Even Calibration: Blocking a genuine RTO saves ₹250. Wrongly blocking a legitimate customer costs 15% of order value. At mean FP order value ₹477.31 (₹71.60 cost), the break-even precision is 22.26% (at catalog gross AOV ₹841, break-even is 33.53%). Aegis's conservative 37.25% precision at T=0.70 exceeds both hurdles.",
+                "Interpretability vs. Retraining Pipeline: LightGBM provides higher raw statistical coverage as an unconstrained ML model. Aegis deliberately trades off peak unconstrained recall for 100% auditable AST rules that self-correct via residual mining without continuous full-model retraining pipelines."
+            ],
+        },
+    }

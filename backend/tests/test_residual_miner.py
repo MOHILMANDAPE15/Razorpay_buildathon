@@ -322,3 +322,25 @@ def test_dynamic_discovery_novelty_finds_unseen_patterns():
     # Check for presence of dynamically discovered new account cluster
     assert "cluster_dyn_new_account_high_val_cod" in discovered_ids or "cluster_dyn_promo_cod_velocity" in discovered_ids
 
+
+def test_rejection_reason_lift_vs_significance():
+    """Asserts that candidates with p < 0.05 and lift <= 1.0 cite lift, not significance, with no contradictory comparisons."""
+    miner = ResidualMiner(significance_alpha=0.05)
+
+    # Case 1: p < 0.05 but lift < 1.0 (subgroup risk is lower than baseline)
+    reason_lift_only = miner.format_rejection_reason(p_val=0.0003, lift=0.87)
+    assert "lift 0.87 indicates no elevated risk" in reason_lift_only
+    assert "Failed significance check" not in reason_lift_only
+    assert ">= 0.05" not in reason_lift_only
+
+    # Case 2: p >= 0.05 and lift > 1.0 (elevated lift but lacks statistical power)
+    reason_p_only = miner.format_rejection_reason(p_val=0.1820, lift=1.65)
+    assert "Failed significance check (p=0.1820 >= 0.05)" in reason_p_only
+    assert "indicates no elevated risk" not in reason_p_only
+
+    # Case 3: Both failed (p >= 0.05 and lift <= 1.0)
+    reason_both = miner.format_rejection_reason(p_val=0.4500, lift=0.92)
+    assert "Failed significance check (p=0.4500 >= 0.05)" in reason_both
+    assert "lift 0.92 indicates no elevated risk" in reason_both
+
+

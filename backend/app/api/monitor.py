@@ -1,4 +1,4 @@
-﻿"""FastAPI endpoints for Real-Time Spike Monitoring & Traffic Diagnostics."""
+"""FastAPI endpoints for Real-Time Spike Monitoring & Traffic Diagnostics."""
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
@@ -24,8 +24,10 @@ class ScoringEventRequest(BaseModel):
 class TrafficSimulationRequest(BaseModel):
     """Configuration for diagnostic traffic streaming replay."""
     total_events: int = Field(default=30, ge=1, le=200, description="Number of events to simulate")
+    count: Optional[int] = Field(default=None, description="Alternative alias for total_events")
     spike_rate: float = Field(default=0.45, ge=0.0, le=1.0, description="Flag rate during the simulated burst")
     order_value_mean: float = Field(default=1250.0, description="Average order value")
+
 
 
 @router.get("/status", response_model=MonitorSnapshot)
@@ -61,7 +63,8 @@ def simulate_traffic(sim: TrafficSimulationRequest):
     """
     import random
     snapshots = []
-    for i in range(sim.total_events):
+    events_to_run = sim.count if sim.count is not None else sim.total_events
+    for i in range(events_to_run):
         is_flagged = random.random() < sim.spike_rate
         val = max(100.0, random.gauss(sim.order_value_mean, 300.0))
         snap = global_spike_monitor.record_scoring_event(
@@ -71,9 +74,10 @@ def simulate_traffic(sim: TrafficSimulationRequest):
         )
         snapshots.append(snap)
 
+
     return {
         "status": "COMPLETED",
-        "events_simulated": sim.total_events,
+        "events_simulated": events_to_run,
         "latest_snapshot": snapshots[-1],
         "active_alerts_count": len(global_spike_monitor.alerts),
     }

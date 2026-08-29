@@ -303,6 +303,7 @@ export function LineageGraph({
             const isInActiveLineage = activeLineageNodeIds?.has(node.id);
             const isChampion = node.status === 'champion' || node.is_champion;
             const isPruned = node.status === 'pruned';
+            const isAutonomous = node.discovery_type === 'autonomous_discovery';
             const hasParents = node.parent_ids.length > 0;
 
             return (
@@ -322,6 +323,8 @@ export function LineageGraph({
                   'rounded-2xl p-4 cursor-pointer transition-all duration-200 flex flex-col justify-between select-none relative group border',
                   isChampion
                     ? 'bg-emerald-50/40 border-emerald-300 shadow-sm hover:shadow-md'
+                    : isAutonomous
+                    ? 'bg-purple-50/40 border-purple-300 hover:border-purple-400 shadow-sm hover:shadow-md'
                     : isPruned
                     ? 'bg-rose-50/30 border-rose-200 hover:border-rose-300'
                     : hasParents
@@ -339,6 +342,11 @@ export function LineageGraph({
                         <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">
                           <Trophy className="w-3 h-3 text-emerald-600" />
                           Champion
+                        </span>
+                      ) : isAutonomous ? (
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-purple-700 bg-purple-100 border border-purple-200 px-2 py-0.5 rounded-full">
+                          <Sparkles className="w-3 h-3 text-purple-600" />
+                          Autonomous Discovery
                         </span>
                       ) : isPruned ? (
                         <span className="flex items-center gap-1 text-[10px] font-semibold text-rose-700 bg-rose-100 border border-rose-200 px-2 py-0.5 rounded-full">
@@ -364,6 +372,7 @@ export function LineageGraph({
                     </h4>
                   </div>
                 </div>
+
 
                 {/* Target Signal & Strategy preview */}
                 <div className="text-[11px] text-slate-600 line-clamp-2 my-1 leading-snug font-normal">

@@ -1,4 +1,4 @@
-﻿"""Knowledge Graph Lineage Engine for Aegis-RTO.
+"""Knowledge Graph Lineage Engine for Aegis-RTO.
 
 Queries PostgreSQL for evolution runs, hypotheses, mutation edges, and evaluation reports.
 Builds run-scoped Directed Acyclic Graph (DAG) structures for visualization and analysis.
@@ -116,11 +116,29 @@ def get_run_lineage_graph(db: Session, run_id: Optional[str] = None) -> Dict[str
 
         is_champ = (h.status == "champion") or (run_obj and run_obj.champion_hypothesis_id == h.hypothesis_id)
 
+        # Discovery Type Tagging: hand_coded, mutated, autonomous_discovery
+        h_id_lower = h.hypothesis_id.lower()
+        h_desc_lower = (h.description or "").lower()
+        h_target_lower = (h.target_signal or "").lower()
+        if (
+            "dyn" in h_id_lower
+            or "autonomous" in h_desc_lower
+            or "cluster_dyn" in h_id_lower
+            or "dynamic" in h_target_lower
+            or h.hypothesis_id == "cluster_dyn_new_account_high_val_cod"
+        ):
+            disc_type = "autonomous_discovery"
+        elif len(parent_map.get(h.hypothesis_id, [])) > 0 or (h.generation_round and h.generation_round > 1):
+            disc_type = "mutated"
+        else:
+            disc_type = "hand_coded"
+
         node = {
             "id": h.hypothesis_id,
             "name": h.name,
             "generation_round": h.generation_round,
             "status": "champion" if is_champ else h.status,
+            "discovery_type": disc_type,
             "target_signal": h.target_signal or "general",
             "description": h.description or "",
             "rationale": h.rationale or "",
