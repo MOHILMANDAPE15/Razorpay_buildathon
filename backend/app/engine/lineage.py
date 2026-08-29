@@ -14,6 +14,16 @@ from app.db.models import EvolutionRun, Hypothesis, HypothesisLineage, Evaluatio
 def get_evolution_runs(db: Session) -> List[Dict[str, Any]]:
     """Retrieves all registered evolution runs sorted by started_at descending."""
     runs = db.query(EvolutionRun).order_by(desc(EvolutionRun.started_at)).all()
+    if not runs:
+        try:
+            from app.db.seed_demo import seed_rich_db
+            from app.db.seed_rich_lineage import seed_rich_lineage_run
+            seed_rich_db()
+            seed_rich_lineage_run()
+            runs = db.query(EvolutionRun).order_by(desc(EvolutionRun.started_at)).all()
+        except Exception as e:
+            print(f"[Lineage Engine] Auto-seed exception: {e}")
+
     results = []
     for r in runs:
         hyps_count = db.query(Hypothesis).filter_by(run_id=r.run_id).count()
@@ -53,6 +63,21 @@ def get_run_lineage_graph(db: Session, run_id: Optional[str] = None) -> Dict[str
             .order_by(desc(EvolutionRun.started_at))
             .first()
         )
+        if not latest_run:
+            try:
+                from app.db.seed_demo import seed_rich_db
+                from app.db.seed_rich_lineage import seed_rich_lineage_run
+                seed_rich_db()
+                seed_rich_lineage_run()
+                latest_run = (
+                    db.query(EvolutionRun)
+                    .filter(EvolutionRun.status == "COMPLETED")
+                    .order_by(desc(EvolutionRun.started_at))
+                    .first()
+                )
+            except Exception as e:
+                print(f"[Lineage Engine] Auto-seed exception: {e}")
+
         if not latest_run:
             latest_run = db.query(EvolutionRun).order_by(desc(EvolutionRun.started_at)).first()
         
