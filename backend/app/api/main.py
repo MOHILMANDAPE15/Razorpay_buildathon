@@ -35,6 +35,28 @@ app.include_router(chatbot_router, prefix="/api/v1")
 
 
 
+@app.on_event("startup")
+def startup_db_init():
+    """Auto-initializes database schema and populates CSV order splits if empty."""
+    try:
+        from app.db.session import get_engine, Base
+        from app.db.ingest import ingest_all_splits
+        from sqlalchemy import text
+        engine = get_engine()
+        Base.metadata.create_all(bind=engine)
+        with engine.connect() as conn:
+            try:
+                count = conn.execute(text("SELECT COUNT(*) FROM orders_train")).scalar()
+            except Exception:
+                count = 0
+            if not count or count == 0:
+                print("[STARTUP] Ingesting canonical order datasets into database...")
+                ingest_all_splits(engine=engine)
+                print("[STARTUP] Ingestion complete.")
+    except Exception as e:
+        print(f"[STARTUP] DB init notice: {e}")
+
+
 @app.get("/api/v1/health", tags=["System Health"])
 def health_check():
     """Service health check and database connectivity probe."""
