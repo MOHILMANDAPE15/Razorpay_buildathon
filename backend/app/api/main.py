@@ -37,22 +37,38 @@ app.include_router(chatbot_router, prefix="/api/v1")
 
 @app.on_event("startup")
 def startup_db_init():
-    """Auto-initializes database schema and populates CSV order splits if empty."""
+    """Auto-initializes database schema, CSV splits, and historical evolution DAGs."""
     try:
         from app.db.session import get_engine, Base
         from app.db.ingest import ingest_all_splits
+        from app.db.seed_demo import seed_rich_db
+        from app.db.seed_rich_lineage import seed_rich_lineage_run
         from sqlalchemy import text
+
         engine = get_engine()
         Base.metadata.create_all(bind=engine)
+
         with engine.connect() as conn:
+            # 1. Ingest order splits if empty
             try:
-                count = conn.execute(text("SELECT COUNT(*) FROM orders_train")).scalar()
+                order_count = conn.execute(text("SELECT COUNT(*) FROM orders_train")).scalar()
             except Exception:
-                count = 0
-            if not count or count == 0:
+                order_count = 0
+            if not order_count or order_count == 0:
                 print("[STARTUP] Ingesting canonical order datasets into database...")
                 ingest_all_splits(engine=engine)
-                print("[STARTUP] Ingestion complete.")
+                print("[STARTUP] Order dataset ingestion complete.")
+
+            # 2. Ingest rich evolution DAG runs and hypothesis lineages if empty
+            try:
+                run_count = conn.execute(text("SELECT COUNT(*) FROM evolution_runs")).scalar()
+            except Exception:
+                run_count = 0
+            if not run_count or run_count == 0:
+                print("[STARTUP] Seeding historical 5-round evolution runs and lineages...")
+                seed_rich_db()
+                seed_rich_lineage_run()
+                print("[STARTUP] Lineage and DAG seed complete.")
     except Exception as e:
         print(f"[STARTUP] DB init notice: {e}")
 

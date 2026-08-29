@@ -42,11 +42,14 @@ export default function LineagePage() {
             (a, b) => (b.total_rounds * 100 + b.hypotheses_tested) - (a.total_rounds * 100 + a.hypotheses_tested)
           )[0];
           setSelectedRunId(bestRun.run_id);
+        } else {
+          setLoading(false);
         }
       })
       .catch((err) => {
         console.error('Failed to load runs:', err);
         setError('Could not connect to FastAPI backend on port 8080.');
+        setLoading(false);
       });
   }, []);
 
