@@ -44,7 +44,7 @@ class SpikeMonitor:
 
     def __init__(
         self,
-        window_size: int = 50,
+        window_size: int = 40,
         baseline_rate: float = 0.08,
         z_threshold: float = 2.5,
         cusum_k: float = 0.02,

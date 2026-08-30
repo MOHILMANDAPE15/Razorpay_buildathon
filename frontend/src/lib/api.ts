@@ -218,7 +218,7 @@ export async function fetchMonitorStatus(): Promise<MonitorSnapshot> {
   return res.json();
 }
 
-export async function fetchMonitorHistory(limit = 60): Promise<TimeSeriesPoint[]> {
+export async function fetchMonitorHistory(limit = 500): Promise<TimeSeriesPoint[]> {
   const res = await fetch(`${API_BASE}/monitor/history?limit=${limit}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to fetch monitor history: ${res.statusText}`);
   return res.json();

@@ -37,7 +37,7 @@ def get_monitor_status():
 
 
 @router.get("/history", response_model=List[Dict[str, Any]])
-def get_monitor_history(limit: int = Query(default=100, ge=10, le=500)):
+def get_monitor_history(limit: int = Query(default=300, ge=10, le=1000)):
     """Returns sliding window time series data points for real-time line charts."""
     return global_spike_monitor.get_history(limit=limit)
 
