@@ -25,62 +25,86 @@ import clsx from 'clsx';
 
 export default function LineagePage() {
   const [runs, setRuns] = useState<EvolutionRunSummary[]>([]);
-  const [selectedRunId, setSelectedRunId] = useState<string>('');
+  const [selectedRunId, setSelectedRunId] = useState<string>('run_drift_adapted_5_rounds');
   const [graphData, setGraphData] = useState<LineageGraphResponse | null>(null);
   const [selectedNode, setSelectedNode] = useState<LineageNode | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingSeconds, setLoadingSeconds] = useState<number>(0);
 
-  // Load available evolution runs
+  // Load available runs on mount
   useEffect(() => {
     fetchEvolutionRuns()
       .then((data) => {
-        setRuns(data);
-        if (data.length > 0) {
-          // Prioritize the complete 5-round run with full mutation lineages
-          const bestRun = [...data].sort(
-            (a, b) => (b.total_rounds * 100 + b.hypotheses_tested) - (a.total_rounds * 100 + a.hypotheses_tested)
-          )[0];
-          setSelectedRunId(bestRun.run_id);
-        } else {
-          setLoading(false);
+        if (data && data.length > 0) {
+          setRuns(data);
+          const hasSelected = data.some((r) => r.run_id === selectedRunId);
+          if (!hasSelected) {
+            setSelectedRunId(data[0].run_id);
+          }
         }
       })
       .catch((err) => {
-        console.error('Failed to load runs:', err);
-        setError('Could not connect to FastAPI backend on port 8080.');
-        setLoading(false);
+        console.error('Failed to load evolution runs:', err);
       });
   }, []);
 
-  // Load graph for selected run
+  // Fetch graph data whenever selected run changes
   useEffect(() => {
-    if (!selectedRunId) return;
+    let isMounted = true;
     setLoading(true);
     setError(null);
-    fetchLineageGraph(selectedRunId)
+    setLoadingSeconds(0);
+
+    const timer = setInterval(() => {
+      if (isMounted) {
+        setLoadingSeconds((prev) => prev + 1);
+      }
+    }, 1000);
+
+    fetchLineageGraph(selectedRunId || undefined)
       .then((data) => {
-        setGraphData(data);
+        if (isMounted && data?.nodes?.length > 0) {
+          setGraphData(data);
+          setError(null);
+        }
       })
       .catch((err) => {
         console.error('Failed to load graph:', err);
-        setError(`Failed to load lineage DAG for run ${selectedRunId}`);
+        if (isMounted) {
+          setError(`Notice: Backend response delayed (${err?.message || 'cold start'}).`);
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (isMounted) {
+          clearInterval(timer);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
   }, [selectedRunId]);
 
   const handleRefresh = () => {
-    if (!selectedRunId) return;
     setLoading(true);
-    fetchLineageGraph(selectedRunId)
-      .then((data) => setGraphData(data))
+    setError(null);
+    setLoadingSeconds(0);
+    fetchLineageGraph(selectedRunId || undefined)
+      .then((data) => {
+        if (data?.nodes?.length > 0) {
+          setGraphData(data);
+        }
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   };
 
   const handleSelectNodeById = (nodeId: string) => {
     if (!graphData) return;
-    const found = graphData.nodes.find((n) => n.id === nodeId);
+    const found = graphData.nodes.find((n: LineageNode) => n.id === nodeId);
     if (found) {
       setSelectedNode(found);
     }
@@ -134,59 +158,82 @@ export default function LineagePage() {
       </div>
 
       {/* Summary KPI Cards */}
-      {graphData?.run_summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
-            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>Champion Savings</span>
-              <Trophy className="w-4 h-4 text-emerald-600" />
-            </div>
-            <div className="text-xl font-bold font-mono text-emerald-600 mt-1">
-              ₹{graphData.run_summary.final_best_net_savings_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Max cost-weighted net benefit</div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Champion Savings</span>
+            <Trophy className="w-4 h-4 text-emerald-600" />
           </div>
-
-          <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
-            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>Total Hypotheses</span>
-              <Layers className="w-4 h-4 text-indigo-600" />
-            </div>
-            <div className="text-xl font-bold font-mono text-slate-900 mt-1">
-              {graphData.run_summary.total_nodes}
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Across {graphData.run_summary.total_rounds} evolution rounds</div>
+          <div className="text-xl font-bold font-mono text-emerald-600 mt-1">
+            {loading && !graphData?.run_summary ? (
+              <span className="inline-block h-6 w-24 bg-emerald-100 animate-pulse rounded" />
+            ) : graphData?.run_summary ? (
+              `₹${graphData.run_summary.final_best_net_savings_inr.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+            ) : (
+              '—'
+            )}
           </div>
+          <div className="text-[11px] text-slate-500 mt-0.5">Max cost-weighted net benefit</div>
+        </div>
 
-          <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
-            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>Mutation Links</span>
-              <GitBranch className="w-4 h-4 text-indigo-600" />
-            </div>
-            <div className="text-xl font-bold font-mono text-indigo-700 mt-1">
-              {graphData.run_summary.total_edges}
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Reflector parent-child edges</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Total Hypotheses</span>
+            <Layers className="w-4 h-4 text-indigo-600" />
           </div>
-
-          <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
-            <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-              <span>Run Status</span>
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            </div>
-            <div className="text-xl font-bold font-mono text-slate-900 uppercase mt-1">
-              {graphData.run_summary.status}
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5 font-mono truncate">
-              {graphData.run_summary.champion_hypothesis_id || 'Top-K active'}
-            </div>
+          <div className="text-xl font-bold font-mono text-slate-900 mt-1">
+            {loading && !graphData?.run_summary ? (
+              <span className="inline-block h-6 w-12 bg-slate-200 animate-pulse rounded" />
+            ) : graphData?.run_summary ? (
+              graphData.run_summary.total_nodes
+            ) : (
+              '—'
+            )}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5">
+            {graphData?.run_summary ? `Across ${graphData.run_summary.total_rounds} evolution rounds` : 'Across rounds'}
           </div>
         </div>
-      )}
+
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Mutation Links</span>
+            <GitBranch className="w-4 h-4 text-indigo-600" />
+          </div>
+          <div className="text-xl font-bold font-mono text-indigo-700 mt-1">
+            {loading && !graphData?.run_summary ? (
+              <span className="inline-block h-6 w-12 bg-indigo-100 animate-pulse rounded" />
+            ) : graphData?.run_summary ? (
+              graphData.run_summary.total_edges
+            ) : (
+              '—'
+            )}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5">Reflector parent-child edges</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>Run Status</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div className="text-xl font-bold font-mono text-slate-900 uppercase mt-1">
+            {loading && !graphData?.run_summary ? (
+              <span className="inline-block h-6 w-20 bg-slate-200 animate-pulse rounded" />
+            ) : graphData?.run_summary ? (
+              graphData.run_summary.status
+            ) : (
+              '—'
+            )}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5 font-mono truncate">
+            {graphData?.run_summary?.champion_hypothesis_id || 'Top-K active'}
+          </div>
+        </div>
+      </div>
 
       {/* Autonomous Pattern Discovery Evidence Callout */}
       <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-200 text-xs text-purple-900 flex items-start gap-3 shadow-xs">
-
         <Sparkles className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -211,11 +258,52 @@ export default function LineagePage() {
         </div>
       )}
 
-      {/* Loading Skeleton */}
+      {/* Loading or Timeout Skeleton */}
       {loading && !graphData && (
-        <div className="h-[600px] rounded-2xl bg-white border border-slate-200 flex flex-col items-center justify-center gap-3 text-slate-500">
-          <RefreshCw className="w-8 h-8 animate-spin text-indigo-600" />
-          <p className="text-sm font-medium">Querying PostgreSQL knowledge graph DAG...</p>
+        <div className="h-[520px] rounded-2xl bg-white border border-slate-200 flex flex-col items-center justify-center gap-4 text-slate-500 p-8 text-center max-w-2xl mx-auto shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600 shadow-sm">
+            <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
+          </div>
+          <div className="space-y-2 max-w-lg">
+            <p className="text-base font-bold text-slate-900">
+              {loadingSeconds >= 20
+                ? `Waking Live Backend Container (${loadingSeconds}s elapsed)...`
+                : loadingSeconds >= 8
+                ? 'Connecting to Aegis-RTO FastAPI Engine...'
+                : 'Loading Knowledge Graph DAG...'}
+            </p>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {loadingSeconds >= 12 ? (
+                <span>
+                  Render.com free instances sleep when inactive. Initial spin-up may take <strong>30–50 seconds</strong>. 
+                  The full multi-round mutation graph will render automatically once live.
+                </span>
+              ) : (
+                'Resolving 5-round hypothesis mutation lineages, validation metrics, and cost-weighted fitness trajectories...'
+              )}
+            </p>
+          </div>
+
+          {loadingSeconds >= 12 && (
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={handleRefresh}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-300 transition"
+              >
+                Retry Request
+              </button>
+              <button
+                onClick={() => {
+                  fetchLineageGraph('run_drift_adapted_5_rounds')
+                    .then((d) => setGraphData(d))
+                    .catch(() => {});
+                }}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
+              >
+                Load Verified 5-Round DAG
+              </button>
+            </div>
+          )}
         </div>
       )}
 

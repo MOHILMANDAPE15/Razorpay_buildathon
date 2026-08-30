@@ -140,25 +140,41 @@ export default function HomePage() {
           <div>
             <span className="text-slate-500 block font-medium">Test Dataset (Held-Out)</span>
             <strong className="text-slate-900 font-mono text-sm">
-              {headline ? `${headline.total_test_orders.toLocaleString()} Orders` : '2,641 Orders'}
+              {headline ? (
+                `${headline.total_test_orders.toLocaleString()} Orders`
+              ) : (
+                <span className="inline-block h-4 w-20 bg-slate-200 animate-pulse rounded mt-0.5" />
+              )}
             </strong>
           </div>
           <div>
             <span className="text-slate-500 block font-medium">Auto Net Savings (T=0.70)</span>
             <strong className="text-emerald-600 font-mono text-sm">
-              {headline ? `+₹${headline.auto_decided_net_savings_inr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '+₹2,458.91'}
+              {headline ? (
+                `+₹${headline.auto_decided_net_savings_inr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+              ) : (
+                <span className="inline-block h-4 w-20 bg-emerald-100 animate-pulse rounded mt-0.5" />
+              )}
             </strong>
           </div>
           <div>
             <span className="text-slate-500 block font-medium">Review Queue Risk</span>
             <strong className="text-amber-600 font-mono text-sm">
-              {headline ? `${(headline.review_queue_rto_concentration * 100).toFixed(1)}% (${headline.review_queue_risk_multiplier}x)` : '47.17% (1.52x)'}
+              {headline ? (
+                `${(headline.review_queue_rto_concentration * 100).toFixed(1)}% (${headline.review_queue_risk_multiplier}x)`
+              ) : (
+                <span className="inline-block h-4 w-24 bg-amber-100 animate-pulse rounded mt-0.5" />
+              )}
             </strong>
           </div>
           <div>
             <span className="text-slate-500 block font-medium">Auto-Decision Rate</span>
             <strong className="text-indigo-600 font-mono text-sm">
-              {headline ? `${headline.auto_decided_pct}% Volume` : '97.99% Volume'}
+              {headline ? (
+                `${headline.auto_decided_pct}% Volume`
+              ) : (
+                <span className="inline-block h-4 w-20 bg-indigo-100 animate-pulse rounded mt-0.5" />
+              )}
             </strong>
           </div>
         </div>

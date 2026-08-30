@@ -8,8 +8,33 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-DATA_DIR = BASE_DIR / "idea_and_data"
+def _resolve_data_dir() -> Path:
+    """Dynamically resolves canonical dataset directory across local, Docker, and production paths."""
+    env_dir = os.getenv("DATA_DIR")
+    if env_dir and Path(env_dir).exists():
+        return Path(env_dir)
+
+    # 1. Workspace repo root: <repo>/idea_and_data
+    repo_root = Path(__file__).resolve().parent.parent.parent.parent
+    if (repo_root / "idea_and_data").exists():
+        return repo_root / "idea_and_data"
+
+    # 2. Backend root or Docker /app/idea_and_data: <backend>/idea_and_data
+    backend_root = Path(__file__).resolve().parent.parent.parent
+    if (backend_root / "idea_and_data").exists():
+        return backend_root / "idea_and_data"
+
+    # 3. Current working directory
+    cwd = Path.cwd()
+    if (cwd / "idea_and_data").exists():
+        return cwd / "idea_and_data"
+    if (cwd.parent / "idea_and_data").exists():
+        return cwd.parent / "idea_and_data"
+
+    return repo_root / "idea_and_data"
+
+
+DATA_DIR = _resolve_data_dir()
 
 
 class CostModelConfig(BaseModel):

@@ -111,23 +111,33 @@ export default function ShadowControlPage() {
             <div className="space-y-2 pt-2 border-t border-slate-100 font-mono text-xs">
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto-Blocked (T=0.70):</span>
-                <span className="text-slate-900 font-bold">{modelA ? modelA.t_070.auto_blocked_count : 23} orders</span>
+                <span className="text-slate-900 font-bold">
+                  {modelA ? `${modelA.t_070.auto_blocked_count} orders` : <span className="inline-block h-3.5 w-16 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">True / False Positives:</span>
-                <span className="text-slate-900 font-bold">{modelA ? `${modelA.t_070.true_positives} TP / ${modelA.t_070.false_positives} FP` : '10 TP / 13 FP'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelA ? `${modelA.t_070.true_positives} TP / ${modelA.t_070.false_positives} FP` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto Precision:</span>
-                <span className="text-slate-900 font-bold">{modelA ? `${(modelA.t_070.precision * 100).toFixed(2)}%` : '43.48%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelA ? `${(modelA.t_070.precision * 100).toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Review Queue Volume:</span>
-                <span className="text-slate-900 font-bold">{modelA ? `${modelA.t_070.manual_review_count} (${modelA.t_070.manual_review_pct}%)` : '76 (2.88%)'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelA ? `${modelA.t_070.manual_review_count} (${modelA.t_070.manual_review_pct}%)` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-2 bg-slate-50 border border-slate-200 px-3 rounded-xl text-slate-900 font-bold">
                 <span>Auto Net Savings:</span>
-                <span>₹{modelA ? modelA.t_070.auto_decided_net_savings_inr.toLocaleString() : '1,715.25'}</span>
+                <span>
+                  {modelA ? `₹${modelA.t_070.auto_decided_net_savings_inr.toLocaleString()}` : <span className="inline-block h-3.5 w-16 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
             </div>
 
@@ -164,23 +174,33 @@ export default function ShadowControlPage() {
             <div className="space-y-2 pt-2 border-t border-slate-100 font-mono text-xs">
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto-Blocked (T=0.70):</span>
-                <span className="text-slate-900 font-bold">{modelC ? modelC.t_070.auto_blocked_count : 63} orders</span>
+                <span className="text-slate-900 font-bold">
+                  {modelC ? `${modelC.t_070.auto_blocked_count} orders` : <span className="inline-block h-3.5 w-16 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">True / False Positives:</span>
-                <span className="text-slate-900 font-bold">{modelC ? `${modelC.t_070.true_positives} TP / ${modelC.t_070.false_positives} FP` : '27 TP / 36 FP'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelC ? `${modelC.t_070.true_positives} TP / ${modelC.t_070.false_positives} FP` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto Precision:</span>
-                <span className="text-slate-900 font-bold">{modelC ? `${(modelC.t_070.precision * 100).toFixed(2)}%` : '42.86%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelC ? `${(modelC.t_070.precision * 100).toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Review Queue Volume:</span>
-                <span className="text-slate-900 font-bold">{modelC ? `${modelC.t_070.manual_review_count} (${modelC.t_070.manual_review_pct}%)` : '160 (6.06%)'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelC ? `${modelC.t_070.manual_review_count} (${modelC.t_070.manual_review_pct}%)` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-2 bg-slate-50 border border-slate-200 px-3 rounded-xl text-slate-900 font-bold">
                 <span>Auto Net Savings:</span>
-                <span>₹{modelC ? modelC.t_070.auto_decided_net_savings_inr.toLocaleString() : '4,387.55'}</span>
+                <span>
+                  {modelC ? `₹${modelC.t_070.auto_decided_net_savings_inr.toLocaleString()}` : <span className="inline-block h-3.5 w-16 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
             </div>
 
@@ -217,23 +237,33 @@ export default function ShadowControlPage() {
             <div className="space-y-2 pt-2 border-t border-slate-100 font-mono text-xs">
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto-Blocked (T=0.70):</span>
-                <span className="text-slate-900 font-bold">{modelB ? modelB.t_070.auto_blocked_count : 51} orders</span>
+                <span className="text-slate-900 font-bold">
+                  {modelB ? `${modelB.t_070.auto_blocked_count} orders` : <span className="inline-block h-3.5 w-16 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">True / False Positives:</span>
-                <span className="text-slate-900 font-bold">{modelB ? `${modelB.t_070.true_positives} TP / ${modelB.t_070.false_positives} FP` : '19 TP / 32 FP'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelB ? `${modelB.t_070.true_positives} TP / ${modelB.t_070.false_positives} FP` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto Precision:</span>
-                <span className="text-slate-900 font-bold">{modelB ? `${(modelB.t_070.precision * 100).toFixed(2)}%` : '37.25%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelB ? `${(modelB.t_070.precision * 100).toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Review Queue Volume:</span>
-                <span className="text-slate-900 font-bold">{modelB ? `${modelB.t_070.manual_review_count} (${modelB.t_070.manual_review_pct}%)` : '53 (2.01%)'}</span>
+                <span className="text-slate-900 font-bold">
+                  {modelB ? `${modelB.t_070.manual_review_count} (${modelB.t_070.manual_review_pct}%)` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-2 bg-slate-50 border border-slate-200 px-3 rounded-xl text-slate-900 font-bold">
                 <span>Auto Net Savings:</span>
-                <span>₹{modelB ? modelB.t_070.auto_decided_net_savings_inr.toLocaleString() : '2,458.91'}</span>
+                <span>
+                  {modelB ? `₹${modelB.t_070.auto_decided_net_savings_inr.toLocaleString()}` : <span className="inline-block h-3.5 w-16 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
             </div>
 
@@ -261,7 +291,7 @@ export default function ShadowControlPage() {
             </p>
           </div>
           <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-            p = {bootstrap ? bootstrap.net_savings.p_value.toFixed(4) : '0.1510'}
+            {bootstrap ? `p = ${bootstrap.net_savings.p_value.toFixed(4)}` : <span className="inline-block h-3.5 w-12 bg-slate-200 animate-pulse rounded" />}
           </span>
         </div>
 
@@ -271,10 +301,10 @@ export default function ShadowControlPage() {
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
             <span className="text-slate-500 block text-[11px]">Net Savings Delta (B - C):</span>
             <div className="text-lg font-bold text-slate-900">
-              ₹{bootstrap ? bootstrap.net_savings.point_delta_inr.toLocaleString() : '-1,928.64'}
+              {bootstrap ? `₹${bootstrap.net_savings.point_delta_inr.toLocaleString()}` : <span className="inline-block h-5 w-24 bg-slate-200 animate-pulse rounded" />}
             </div>
             <div className="text-[11px] text-slate-600">
-              95% CI: [₹{bootstrap ? bootstrap.net_savings.ci_95_lower_inr.toLocaleString() : '-4,721.01'}, +₹{bootstrap ? bootstrap.net_savings.ci_95_upper_inr.toLocaleString() : '622.37'}]
+              {bootstrap ? `95% CI: [₹${bootstrap.net_savings.ci_95_lower_inr.toLocaleString()}, +₹${bootstrap.net_savings.ci_95_upper_inr.toLocaleString()}]` : <span className="inline-block h-3 w-36 bg-slate-100 animate-pulse rounded" />}
             </div>
             <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 mt-1">
               Crosses Zero (p = 0.1510)
@@ -285,10 +315,10 @@ export default function ShadowControlPage() {
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
             <span className="text-slate-500 block text-[11px]">Precision Delta (B - C):</span>
             <div className="text-lg font-bold text-slate-900">
-              {bootstrap ? `${bootstrap.precision.point_delta_pct.toFixed(2)}%` : '-5.60%'}
+              {bootstrap ? `${bootstrap.precision.point_delta_pct.toFixed(2)}%` : <span className="inline-block h-5 w-16 bg-slate-200 animate-pulse rounded" />}
             </div>
             <div className="text-[11px] text-slate-600">
-              95% CI: [{bootstrap ? `${bootstrap.precision.ci_95_lower_pct.toFixed(2)}%` : '-19.93%'}, +{bootstrap ? `${bootstrap.precision.ci_95_upper_pct.toFixed(2)}%` : '7.89%'}]
+              {bootstrap ? `95% CI: [${bootstrap.precision.ci_95_lower_pct.toFixed(2)}%, +${bootstrap.precision.ci_95_upper_pct.toFixed(2)}%]` : <span className="inline-block h-3 w-36 bg-slate-100 animate-pulse rounded" />}
             </div>
             <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 mt-1">
               Crosses Zero (p = 0.4300)
@@ -299,10 +329,10 @@ export default function ShadowControlPage() {
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
             <span className="text-slate-500 block text-[11px]">Recall Delta (B - C):</span>
             <div className="text-lg font-bold text-slate-900">
-              {bootstrap ? `${bootstrap.recall.point_delta_pct.toFixed(2)}%` : '-0.98%'}
+              {bootstrap ? `${bootstrap.recall.point_delta_pct.toFixed(2)}%` : <span className="inline-block h-5 w-16 bg-slate-200 animate-pulse rounded" />}
             </div>
             <div className="text-[11px] text-slate-600">
-              95% CI: [{bootstrap ? `${bootstrap.recall.ci_95_lower_pct.toFixed(2)}%` : '-2.19%'}, +{bootstrap ? `${bootstrap.recall.ci_95_upper_pct.toFixed(2)}%` : '0.13%'}]
+              {bootstrap ? `95% CI: [${bootstrap.recall.ci_95_lower_pct.toFixed(2)}%, +${bootstrap.recall.ci_95_upper_pct.toFixed(2)}%]` : <span className="inline-block h-3 w-36 bg-slate-100 animate-pulse rounded" />}
             </div>
             <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 border border-slate-300 mt-1">
               Crosses Zero (p = 0.1170)
@@ -371,23 +401,33 @@ export default function ShadowControlPage() {
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto-Blocked (T=0.70):</span>
-                <span className="text-slate-900 font-bold">{lgbComparison ? `${lgbComparison.evolved_rule_ensemble.true_positives + lgbComparison.evolved_rule_ensemble.false_positives} (19 TP / 32 FP)` : '51 (19 TP / 32 FP)'}</span>
+                <span className="text-slate-900 font-bold">
+                  {lgbComparison ? `${lgbComparison.evolved_rule_ensemble.true_positives + lgbComparison.evolved_rule_ensemble.false_positives} (19 TP / 32 FP)` : <span className="inline-block h-3.5 w-24 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto Precision:</span>
-                <span className="text-slate-900 font-bold">{lgbComparison ? `${(lgbComparison.evolved_rule_ensemble.precision * 100).toFixed(2)}%` : '37.25%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {lgbComparison ? `${(lgbComparison.evolved_rule_ensemble.precision * 100).toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto Recall:</span>
-                <span className="text-slate-900 font-bold">{lgbComparison ? `${(lgbComparison.evolved_rule_ensemble.recall * 100).toFixed(2)}%` : '2.39%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {lgbComparison ? `${(lgbComparison.evolved_rule_ensemble.recall * 100).toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto-Decision Rate:</span>
-                <span className="text-slate-900 font-bold">{lgbComparison ? `${lgbComparison.evolved_rule_ensemble.auto_decision_rate_pct.toFixed(2)}%` : '97.99%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {lgbComparison ? `${lgbComparison.evolved_rule_ensemble.auto_decision_rate_pct.toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-2 bg-slate-50 border border-slate-200 px-3 rounded-xl text-slate-900 font-bold">
                 <span>Net Financial Savings:</span>
-                <span>+₹{lgbComparison ? lgbComparison.evolved_rule_ensemble.net_financial_savings_inr.toLocaleString() : '2,458.91'}</span>
+                <span>
+                  {lgbComparison ? `+₹${lgbComparison.evolved_rule_ensemble.net_financial_savings_inr.toLocaleString()}` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
             </div>
 
@@ -428,15 +468,21 @@ export default function ShadowControlPage() {
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Auto-Blocked (Tuned T=0.65):</span>
-                <span className="text-slate-900 font-bold">{lgbComparison ? `${lgbComparison.lightgbm_baseline.true_positives + lgbComparison.lightgbm_baseline.false_positives} (118 TP / 113 FP)` : '231 (118 TP / 113 FP)'}</span>
+                <span className="text-slate-900 font-bold">
+                  {lgbComparison ? `${lgbComparison.lightgbm_baseline.true_positives + lgbComparison.lightgbm_baseline.false_positives} (118 TP / 113 FP)` : <span className="inline-block h-3.5 w-24 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Precision (Higher Raw Stat):</span>
-                <span className="text-slate-900 font-bold">{lgbComparison ? `${(lgbComparison.lightgbm_baseline.precision * 100).toFixed(2)}%` : '51.08%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {lgbComparison ? `${(lgbComparison.lightgbm_baseline.precision * 100).toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Recall (Higher Raw Stat):</span>
-                <span className="text-slate-900 font-bold">{lgbComparison ? `${(lgbComparison.lightgbm_baseline.recall * 100).toFixed(2)}%` : '14.41%'}</span>
+                <span className="text-slate-900 font-bold">
+                  {lgbComparison ? `${(lgbComparison.lightgbm_baseline.recall * 100).toFixed(2)}%` : <span className="inline-block h-3.5 w-14 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Training Split:</span>
@@ -444,7 +490,9 @@ export default function ShadowControlPage() {
               </div>
               <div className="flex justify-between py-2 bg-slate-50 border border-slate-200 px-3 rounded-xl text-slate-900 font-bold">
                 <span>Net Financial Savings:</span>
-                <span>{lgbComparison ? `-₹${Math.abs(lgbComparison.lightgbm_baseline.net_financial_savings_inr).toLocaleString()}` : '-₹3,941.66'}</span>
+                <span>
+                  {lgbComparison ? `-₹${Math.abs(lgbComparison.lightgbm_baseline.net_financial_savings_inr).toLocaleString()}` : <span className="inline-block h-3.5 w-20 bg-slate-200 animate-pulse rounded" />}
+                </span>
               </div>
             </div>
 

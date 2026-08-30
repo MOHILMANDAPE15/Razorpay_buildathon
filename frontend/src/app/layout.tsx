@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Sidebar } from '@/components/Sidebar';
 import { JudgeChatbotWidget } from '@/components/JudgeChatbotWidget';
+import { BackendColdStartNotification } from '@/components/BackendColdStartNotification';
 
 export const metadata: Metadata = {
   title: 'Aegis-RTO | Autonomous COD Fraud Defense Engine',
@@ -32,6 +33,7 @@ export default function RootLayout({
           </div>
         </main>
         <JudgeChatbotWidget />
+        <BackendColdStartNotification />
       </body>
     </html>
   );

@@ -191,8 +191,9 @@ export interface ReviewQueueResponse {
   }>;
 }
 
-export async function fetchReviewMetrics(): Promise<Section62Metrics> {
-  const res = await fetch(`${API_BASE}/review/metrics`, { cache: 'no-store' });
+export async function fetchReviewMetrics(cohort?: string): Promise<Section62Metrics> {
+  const url = cohort ? `${API_BASE}/review/metrics?cohort=${encodeURIComponent(cohort)}` : `${API_BASE}/review/metrics`;
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to fetch review metrics: ${res.statusText}`);
   return res.json();
 }

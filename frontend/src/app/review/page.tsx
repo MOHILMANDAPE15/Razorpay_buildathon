@@ -32,7 +32,7 @@ export default function ReviewQueuePage() {
       setError(null);
       
       const [m, q] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/review/metrics?cohort=${cohort}`, { cache: 'no-store' }).then(r => r.json()),
+        fetchReviewMetrics(cohort).catch(() => null),
         fetchReviewQueue().catch(() => null),
       ]);
       
@@ -159,26 +159,54 @@ export default function ReviewQueuePage() {
               1. Auto-Decided Cohort
             </span>
             <span className="text-xs text-emerald-700 font-mono font-bold">
-              {metrics ? `${metrics.auto_decided_pct}% of traffic` : '96.1%'}
+              {loading || !metrics ? (
+                <span className="inline-block h-3.5 w-16 bg-emerald-100 animate-pulse rounded" />
+              ) : (
+                `${metrics.auto_decided_pct}% of traffic`
+              )}
             </span>
           </div>
 
           <div className="space-y-2 pt-1 font-mono text-xs">
             <div className="flex justify-between py-1.5 border-b border-emerald-100">
               <span className="text-slate-600">Auto-Approved (Risk &lt; 0.35):</span>
-              <span className="text-slate-900 font-bold">{metrics ? metrics.auto_approved_count.toLocaleString() : '2,537'}</span>
+              <span className="text-slate-900 font-bold">
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-12 bg-slate-200 animate-pulse rounded" />
+                ) : (
+                  metrics.auto_approved_count.toLocaleString()
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-emerald-100">
               <span className="text-slate-600">Auto-Blocked (Risk ≥ 0.70):</span>
-              <span className="text-rose-600 font-bold">{metrics ? metrics.auto_blocked_count.toLocaleString() : '51'}</span>
+              <span className="text-rose-600 font-bold">
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-8 bg-rose-100 animate-pulse rounded" />
+                ) : (
+                  metrics.auto_blocked_count.toLocaleString()
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-2 bg-emerald-100/70 px-3 rounded-xl text-emerald-900 mt-2 font-bold">
               <span>Auto Net Savings:</span>
-              <span>₹{metrics ? metrics.auto_decided_net_savings_inr.toLocaleString() : '8,072.21'}</span>
+              <span>
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-16 bg-emerald-200 animate-pulse rounded" />
+                ) : (
+                  `₹${metrics.auto_decided_net_savings_inr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-1 text-[11px] text-slate-500">
               <span>Auto Precision:</span>
-              <span className="text-slate-800 font-semibold">{metrics ? `${(metrics.auto_decided_precision * 100).toFixed(1)}%` : '47.5%'}</span>
+              <span className="text-slate-800 font-semibold">
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-12 bg-slate-200 animate-pulse rounded" />
+                ) : (
+                  `${(metrics.auto_decided_precision * 100).toFixed(2)}%`
+                )}
+              </span>
             </div>
           </div>
         </div>
@@ -190,22 +218,44 @@ export default function ReviewQueuePage() {
               2. Review Queue Cohort
             </span>
             <span className="text-xs text-amber-700 font-mono font-bold">
-              {metrics ? `${metrics.manual_review_pct}% of traffic` : '2.01%'}
+              {loading || !metrics ? (
+                <span className="inline-block h-3.5 w-16 bg-amber-100 animate-pulse rounded" />
+              ) : (
+                `${metrics.manual_review_pct}% of traffic`
+              )}
             </span>
           </div>
 
           <div className="space-y-2 pt-1 font-mono text-xs">
             <div className="flex justify-between py-1.5 border-b border-amber-100">
               <span className="text-slate-600">Queue Volume:</span>
-              <span className="text-slate-900 font-bold">{metrics ? metrics.manual_review_count.toLocaleString() : '53'} orders</span>
+              <span className="text-slate-900 font-bold">
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-12 bg-slate-200 animate-pulse rounded" />
+                ) : (
+                  `${metrics.manual_review_count.toLocaleString()} orders`
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-amber-100">
               <span className="text-slate-600">RTO Concentration:</span>
-              <span className="text-amber-800 font-bold text-sm">{metrics ? `${(metrics.review_queue_rto_concentration * 100).toFixed(1)}%` : '47.2%'}</span>
+              <span className="text-amber-800 font-bold text-sm">
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-12 bg-amber-200 animate-pulse rounded" />
+                ) : (
+                  `${(metrics.review_queue_rto_concentration * 100).toFixed(2)}%`
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-2 bg-amber-100/70 px-3 rounded-xl text-amber-900 mt-2 font-bold">
               <span>Queue Triaged Value:</span>
-              <span>₹{metrics ? metrics.review_queue_total_value_inr.toLocaleString() : '22,783.20'}</span>
+              <span>
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-16 bg-amber-200 animate-pulse rounded" />
+                ) : (
+                  `₹${metrics.review_queue_total_value_inr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-1 text-[11px] text-slate-500">
               <span>Risk Density Multiplier:</span>
@@ -226,15 +276,33 @@ export default function ReviewQueuePage() {
           <div className="space-y-2 pt-1 font-mono text-xs">
             <div className="flex justify-between py-1.5 border-b border-indigo-100">
               <span className="text-slate-600">Total Cohort Orders:</span>
-              <span className="text-slate-900 font-bold">{metrics ? metrics.total_orders.toLocaleString() : '2,641'}</span>
+              <span className="text-slate-900 font-bold">
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-12 bg-slate-200 animate-pulse rounded" />
+                ) : (
+                  metrics.total_orders.toLocaleString()
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-indigo-100">
               <span className="text-slate-600">Automated Decision Rate:</span>
-              <span className="text-emerald-700 font-bold">{metrics ? `${metrics.auto_decided_pct}%` : '96.1%'}</span>
+              <span className="text-emerald-700 font-bold">
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-12 bg-emerald-100 animate-pulse rounded" />
+                ) : (
+                  `${metrics.auto_decided_pct}%`
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-2 bg-indigo-100/70 px-3 rounded-xl text-indigo-900 mt-2 font-bold">
               <span>Full System Net Savings:</span>
-              <span>₹{metrics ? metrics.full_system_net_savings_inr.toLocaleString() : '8,072.21'}</span>
+              <span>
+                {loading || !metrics ? (
+                  <span className="inline-block h-3.5 w-16 bg-indigo-200 animate-pulse rounded" />
+                ) : (
+                  `₹${metrics.full_system_net_savings_inr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                )}
+              </span>
             </div>
             <div className="flex justify-between py-1 text-[11px] text-slate-500">
               <span>Methodology Audit:</span>
@@ -257,11 +325,27 @@ export default function ReviewQueuePage() {
             </p>
           </div>
           <span className="text-xs text-amber-800 font-mono font-bold px-3 py-1 rounded-full bg-amber-50 border border-amber-200">
-            {queueData ? `${queueData.total_in_queue} queued cases` : '53 queued cases'}
+            {loading || !queueData ? (
+              <span className="inline-block h-3.5 w-20 bg-amber-100 animate-pulse rounded" />
+            ) : (
+              `${queueData.total_in_queue} queued cases`
+            )}
           </span>
         </div>
 
-        {queueData && queueData.queue.length > 0 ? (
+        {loading ? (
+          <div className="py-8 space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-10 bg-slate-50 rounded-xl animate-pulse flex items-center px-4 justify-between">
+                <div className="h-4 w-20 bg-slate-200 rounded" />
+                <div className="h-4 w-12 bg-slate-200 rounded" />
+                <div className="h-4 w-16 bg-slate-200 rounded" />
+                <div className="h-4 w-48 bg-slate-200 rounded" />
+                <div className="h-4 w-16 bg-slate-200 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : queueData && queueData.queue.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
               <thead>
