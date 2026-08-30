@@ -66,11 +66,9 @@ export function Sidebar() {
   return (
     <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col bg-white border-r border-slate-200 shadow-xs z-40">
       {/* Brand */}
-      <Link href="/" className="flex items-center gap-3 px-5 py-5 border-b border-slate-100 group">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-emerald-600 p-0.5 shadow-sm shadow-indigo-500/20 group-hover:scale-105 transition duration-200 shrink-0">
-          <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
-            <ShieldCheck className="w-4 h-4 text-indigo-600" />
-          </div>
+      <Link href="/" className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 group">
+        <div className="w-10 h-10 rounded-xl bg-slate-900 p-1 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition duration-200 shrink-0 border border-slate-700 flex items-center justify-center overflow-hidden">
+          <img src="/aegis-logo.png" alt="Aegis Logo" className="w-full h-full object-contain" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">

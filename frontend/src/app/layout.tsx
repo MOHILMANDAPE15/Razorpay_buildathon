@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   title: 'Aegis-RTO | Autonomous COD Fraud Defense Engine',
   description:
     'Self-evolving return-to-origin and cash-on-delivery fraud defense system with live knowledge graph lineage tracking and 3-way decision routing.',
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/aegis-logo.png',
+  },
 };
 
 export default function RootLayout({
