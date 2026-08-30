@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import { fetchBenchmarkSummary, BenchmarkSummaryResponse } from '@/lib/api';
 import ArchitectureDiagram from '@/components/ArchitectureDiagram';
-import { LifecycleBarChart } from '@/components/charts/LifecycleBarChart';
 import { TrajectoryLineChart } from '@/components/charts/TrajectoryLineChart';
 
 export default function HomePage() {
@@ -387,9 +386,6 @@ export default function HomePage() {
           </div>
         )}
       </div>
-
-      {/* Visual Evolutionary Lifecycle & Unit Economics Chart */}
-      <LifecycleBarChart />
 
       {/* Visual Drift Shock & Autonomous Recovery Trajectory Curve */}
       <TrajectoryLineChart />
