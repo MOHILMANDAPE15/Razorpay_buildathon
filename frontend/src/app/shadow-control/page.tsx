@@ -34,10 +34,10 @@ export default function ShadowControlPage() {
   }, []);
 
   const models = summary?.ablation_matrix?.models;
-  const modelA = models?.model_a_frozen_v1;
-  const modelC = models?.model_c_shadow_control;
-  const modelB = models?.model_b_drift_champion;
-  const bootstrap = summary?.ablation_matrix?.paired_bootstrap_b_vs_c_t070;
+  const modelA = models?.model_a_frozen_v1 || models?.frozen_v1;
+  const modelC = models?.model_c_shadow_control || models?.shadow_control;
+  const modelB = models?.model_b_drift_champion || models?.drift_adapted;
+  const bootstrap = summary?.ablation_matrix?.paired_bootstrap_b_vs_c_t070 || summary?.paired_bootstrap;
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
