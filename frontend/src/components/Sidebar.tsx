@@ -28,16 +28,16 @@ const navItems = [
     description: 'Rule evolution lineage DAG',
   },
   {
-    href: '/mining',
-    label: 'Residual Mining',
-    icon: Activity,
-    description: 'Mature false negative mining & cooldowns',
-  },
-  {
     href: '/shadow-control',
     label: 'Ablation Matrix',
     icon: Scale,
     description: 'Mechanism proof & model comparison',
+  },
+  {
+    href: '/mining',
+    label: 'Residual Mining',
+    icon: Activity,
+    description: 'Mature false negative mining & cooldowns',
   },
   {
     href: '/playground',
