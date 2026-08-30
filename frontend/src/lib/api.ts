@@ -421,9 +421,8 @@ export interface RuleEvaluationDetail {
 
 export interface OrderTestCaseResponse {
   order_id: string;
-  tier: 'easy' | 'medium' | 'hard';
-  tier_label: string;
-  tier_description: string;
+  classification: 'Clear pattern' | 'Borderline' | 'Adaptation gap';
+  classification_reason: string;
   order_features: Record<string, any>;
   routing_decision: 'AUTO_APPROVE' | 'AUTO_BLOCK' | 'MANUAL_REVIEW';
   risk_score: number;
@@ -437,19 +436,26 @@ export interface OrderTestCaseResponse {
   outcome_classification: string;
   is_correct: boolean | null;
   verdict_badge: string;
+  dataset_split?: string;
+  split_description?: string;
   explanation?: string;
+  tier?: string;
+  tier_label?: string;
+  tier_description?: string;
 }
 
 
 export interface ExplainRequest {
   order_id: string;
-  tier: string;
+  classification?: string;
+  classification_reason?: string;
   order_features: Record<string, any>;
   routing_decision: string;
   risk_score: number;
   matched_rules: Array<{ rule_id: string; rule_name: string; rule_code?: string }>;
   ground_truth: Record<string, any>;
   outcome_classification: string;
+  tier?: string;
 }
 
 export interface ExplainResponse {
@@ -478,8 +484,8 @@ export interface ChatbotAskResponse {
   source: string;
 }
 
-export async function fetchPlaygroundTestCase(tier = 'easy'): Promise<OrderTestCaseResponse> {
-  const res = await fetch(`${API_BASE}/playground/generate?tier=${tier}`, { cache: 'no-store' });
+export async function fetchPlaygroundTestCase(): Promise<OrderTestCaseResponse> {
+  const res = await fetch(`${API_BASE}/playground/generate`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to generate playground test case: ${res.statusText}`);
   return res.json();
 }
