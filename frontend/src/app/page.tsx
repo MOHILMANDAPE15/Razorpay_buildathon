@@ -100,22 +100,31 @@ export default function HomePage() {
     <div className="space-y-10 animate-fade-in pb-12">
       {/* 1. Eye-Catching Hero Section */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-white via-indigo-50/50 to-slate-50 p-6 sm:p-10 border border-slate-200/90 shadow-sm space-y-6">
-        <div className="max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            Track 2: Return-Risk Scorer &amp; Autonomous Adaptive Defense
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="max-w-3xl space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              Track 2: Return-Risk Scorer &amp; Autonomous Adaptive Defense
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+              Autonomous, Self-Evolving <br />
+              <span className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-emerald-600 bg-clip-text text-transparent">
+                RTO &amp; COD Fraud Defense
+              </span>
+            </h1>
+
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-medium">
+              Self-evolving AI that discovers, verifies, and deploys Python AST fraud rules in under 2 minutes—stopping courier RTO losses and protecting razor-thin e-commerce margins without manual rule engineering.
+            </p>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-            Autonomous, Self-Evolving <br />
-            <span className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-emerald-600 bg-clip-text text-transparent">
-              RTO &amp; COD Fraud Defense
-            </span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-medium">
-            Self-evolving AI that discovers, verifies, and deploys Python AST fraud rules in under 2 minutes—stopping courier RTO losses and protecting razor-thin e-commerce margins without manual rule engineering.
-          </p>
+          {/* Aegis Shield Brand Badge */}
+          <div className="hidden lg:flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm shrink-0 w-44 hover:shadow-md transition">
+            <img src="/aegis-logo.png" alt="Aegis Shield Emblem" className="w-24 h-24 object-contain" />
+            <span className="text-[10px] font-black text-slate-900 font-mono tracking-widest mt-1">AEGIS-RTO</span>
+            <span className="text-[8px] font-bold text-slate-500 font-mono tracking-wider">PROTECT · MONITOR · RESPOND</span>
+          </div>
         </div>
 
         {/* High-Impact Executive Profit & Performance KPI Grid */}

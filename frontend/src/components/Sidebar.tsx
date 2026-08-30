@@ -66,21 +66,21 @@ export function Sidebar() {
   return (
     <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col bg-white border-r border-slate-200 shadow-xs z-40">
       {/* Brand */}
-      <Link href="/" className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 group">
-        <div className="w-10 h-10 rounded-xl bg-slate-900 p-1 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition duration-200 shrink-0 border border-slate-700 flex items-center justify-center overflow-hidden">
+      <Link href="/" className="flex items-center gap-3 px-4 py-4 border-b border-slate-100 group">
+        <div className="w-10 h-10 rounded-xl bg-slate-950 p-1 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition duration-200 shrink-0 border border-slate-800 flex items-center justify-center overflow-hidden">
           <img src="/aegis-logo.png" alt="Aegis Logo" className="w-full h-full object-contain" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="font-extrabold text-base tracking-tight text-slate-900 leading-none">
-              Aegis-RTO
+            <span className="font-extrabold text-sm tracking-tight text-slate-900 leading-none font-mono">
+              AEGIS-RTO
             </span>
-            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+            <span className="text-[8.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
               Live
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 font-medium mt-0.5 truncate">
-            COD Fraud Defense
+          <p className="text-[9.5px] text-slate-500 font-mono mt-1 truncate tracking-tight">
+            PROTECT · MONITOR · RESPOND
           </p>
         </div>
       </Link>
