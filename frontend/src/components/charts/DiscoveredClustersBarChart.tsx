@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Layers, Flame, TrendingUp, CheckCircle2, DollarSign, Clock, Sparkles, Code2, ChevronRight, History } from 'lucide-react';
+import { Layers, Flame, TrendingUp, CheckCircle2, DollarSign, Clock, Sparkles, Code2, ChevronRight, History, ShieldCheck, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { DiscoveredCluster } from '@/lib/api';
 
@@ -18,9 +18,6 @@ export function DiscoveredClustersBarChart({
 }: DiscoveredClustersBarChartProps) {
   if (!clusters || clusters.length === 0) return null;
 
-  const maxMiss = Math.max(...clusters.map((c) => c.miss_volume), 1);
-  const maxCohort = Math.max(...clusters.map((c) => c.cohort_size), 1);
-
   return (
     <div className="space-y-6">
       {/* Visual Header */}
@@ -33,14 +30,14 @@ export function DiscoveredClustersBarChart({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-extrabold text-slate-900 tracking-tight">
-                  Discovered Uncaught Fraud Patterns & Recoverable Money
+                  Discovered Uncaught Fraud Patterns & Realized Profit
                 </h3>
                 <span className="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300">
-                  95%+ Verified
+                  95%+ Verified Real
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-0.5">
-                The Residual Miner finds hidden fraud loops that bypassed existing rules, calculates recoverable cash, and automatically builds defensive code.
+                The Residual Miner finds unflagged fraud loops, sets a target savings pool, and synthesizes rules that pass strict Gate 1 profit validation.
               </p>
             </div>
           </div>
@@ -51,12 +48,17 @@ export function DiscoveredClustersBarChart({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {clusters.map((cluster) => {
           const isSelected = selectedClusterId === cluster.cluster_id;
-          const missPercent = Math.max(12, (cluster.miss_volume / maxMiss) * 100);
-          const cohortPercent = Math.max(12, (cluster.cohort_size / maxCohort) * 100);
           const hyp = cluster.resulting_hypothesis;
-          const recoverableCash = cluster.miss_volume * 250;
+          const targetPoolCash = cluster.miss_volume * 250;
+          const actualRealizedSavings = hyp?.net_financial_delta_inr || 0;
           const isAutonomous = cluster.is_autonomous_discovery;
           const confidencePct = Math.min(99.9, (1 - cluster.p_value) * 100);
+
+          // Accurate Proportional Bars:
+          // Pink bar width = (miss_volume / cohort_size) * 100 (e.g. 266 / 697 = 38.2%)
+          const bounceProportionPct = Math.min(100, Math.max(8, cluster.miss_percentage_of_cohort));
+          // Purple bar width = 100% of the matching cohort container
+          const cohortBarWidthPct = 100;
 
           return (
             <div
@@ -87,7 +89,7 @@ export function DiscoveredClustersBarChart({
                     {cluster.status === 'on_cooldown' ? (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
                         <Clock className="w-3 h-3 text-amber-600" />
-                        On Cooldown (Paused {cluster.cooldown_info?.cooldown_until_round || 3} rounds)
+                        On Cooldown ({cluster.cooldown_info?.cooldown_until_round || 3} rounds)
                       </span>
                     ) : cluster.status === 'bypassed_surge' ? (
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1 animate-pulse">
@@ -118,68 +120,91 @@ export function DiscoveredClustersBarChart({
                         key={k}
                         className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 font-semibold"
                       >
-                        {k}: <span className="text-purple-700">{String(v)}</span>
+                        {k}: <span className="text-purple-700 font-bold">{String(v)}</span>
                       </span>
                     ))}
                   </div>
                 </div>
 
-                {/* Financial Value Banner */}
-                <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between text-xs font-mono">
-                  <span className="text-emerald-900 font-bold flex items-center gap-1">
-                    <DollarSign className="w-4 h-4 text-emerald-600" />
-                    Recoverable Logistics Waste:
-                  </span>
-                  <strong className="text-sm font-extrabold text-emerald-700">
-                    +₹{recoverableCash.toLocaleString('en-IN')}
-                  </strong>
-                </div>
-
-                {/* Visual Bars Comparison */}
-                <div className="space-y-2.5 pt-1">
-                  {/* Missed RTOs Bar */}
+                {/* Financial Breakdown: Target Waste vs Realized Net Savings */}
+                <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs shadow-2xs">
                   <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono">
-                      <span className="text-slate-500 text-[11px]">Unflagged Bounced Orders:</span>
-                      <span className="font-bold text-rose-600">{cluster.miss_volume} orders lost</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-rose-500 to-pink-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${missPercent}%` }}
-                      />
-                    </div>
+                    <span className="text-[10.5px] text-slate-500 block">1. Target Waste Pool</span>
+                    <strong className="text-sm font-extrabold text-slate-700 block">
+                      ₹{targetPoolCash.toLocaleString('en-IN')}
+                    </strong>
+                    <span className="text-[10px] text-slate-400 block">
+                      ({cluster.miss_volume} misses × ₹250 loss)
+                    </span>
                   </div>
 
-                  {/* Total Traffic Volume Bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono">
-                      <span className="text-slate-500 text-[11px]">Total Matching Orders:</span>
-                      <span className="font-bold text-slate-800">{cluster.cohort_size} orders in group</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${cohortPercent}%` }}
-                      />
-                    </div>
+                  <div className="space-y-1 bg-emerald-100/70 p-2 rounded-lg border border-emerald-200">
+                    <span className="text-[10.5px] text-emerald-900 font-bold block flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                      2. Actual Net Profit
+                    </span>
+                    <strong className="text-sm font-extrabold text-emerald-800 block">
+                      {actualRealizedSavings >= 0 ? `+₹${actualRealizedSavings.toLocaleString('en-IN')}` : `-₹${Math.abs(actualRealizedSavings).toLocaleString('en-IN')}`}
+                    </strong>
+                    <span className="text-[10px] text-emerald-800/80 font-semibold block">
+                      {hyp?.gate_verdict === 'PROMOTED' ? '✓ Passed Gate 1 Profit Test' : '⚠ Blocked by Cost Gate'}
+                    </span>
                   </div>
                 </div>
 
-                {/* Plain English Explanation of Metrics */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 font-mono text-xs">
+                {/* Proportional Visual Bars (Nesting: Misses as % of Group) */}
+                <div className="space-y-3 pt-1">
+                  {/* Total Traffic Group Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-slate-500 text-[11px]">Total Matching Group Orders:</span>
+                      <span className="font-bold text-purple-900">{cluster.cohort_size} orders</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-purple-200">
+                      <div
+                        className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1 text-[9px] text-white font-mono font-bold"
+                        style={{ width: `${cohortBarWidthPct}%` }}
+                      >
+                        100% of Group
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bounced Misses Bar (Proportionate: e.g. 38.2% of group) */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-mono">
+                      <span className="text-slate-500 text-[11px]">
+                        Bounced / RTO Orders in Group:
+                      </span>
+                      <span className="font-bold text-rose-600">
+                        {cluster.miss_volume} orders ({cluster.miss_percentage_of_cohort.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-rose-200">
+                      <div
+                        className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1.5 text-[9px] text-white font-mono font-bold"
+                        style={{ width: `${bounceProportionPct}%` }}
+                      >
+                        {cluster.miss_percentage_of_cohort.toFixed(0)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Plain English Metrics Grid */}
+                <div className="grid grid-cols-2 gap-2 pt-1 font-mono text-xs">
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-0.5">
                     <span className="text-[10.5px] text-slate-500 block">Risk Lift Multiplier</span>
                     <strong className="text-sm font-extrabold text-purple-700">{cluster.statistical_lift.toFixed(2)}× Higher Risk</strong>
-                    <span className="text-[10px] text-slate-400 block">
+                    <span className="text-[10px] text-slate-500 block">
                       ({cluster.statistical_lift.toFixed(2)}x more likely to bounce than normal)
                     </span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-0.5">
-                    <span className="text-[10.5px] text-slate-500 block">Failure Rate in Group</span>
-                    <strong className="text-sm font-extrabold text-rose-600">{cluster.miss_percentage_of_cohort.toFixed(1)}% Bounced</strong>
-                    <span className="text-[10px] text-slate-400 block">
-                      (Severe concentration of RTOs)
+                    <span className="text-[10.5px] text-slate-500 block">Failure Concentration</span>
+                    <strong className="text-sm font-extrabold text-rose-600">{cluster.miss_percentage_of_cohort.toFixed(1)}% RTO Rate</strong>
+                    <span className="text-[10px] text-slate-500 block">
+                      (Heavy cluster of return fraud)
                     </span>
                   </div>
                 </div>
@@ -192,8 +217,15 @@ export function DiscoveredClustersBarChart({
                         <Code2 className="w-3.5 h-3.5 text-indigo-400" />
                         AI Shield Created: <span className="text-indigo-300">{hyp.hypothesis_id}</span>
                       </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-700/50">
-                        {hyp.gate_verdict} (+₹{hyp.net_financial_delta_inr.toLocaleString('en-IN')})
+                      <span
+                        className={clsx(
+                          'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                          hyp.gate_verdict === 'PROMOTED'
+                            ? 'bg-emerald-950 text-emerald-300 border-emerald-700/50'
+                            : 'bg-rose-950 text-rose-300 border-rose-700/50'
+                        )}
+                      >
+                        {hyp.gate_verdict} ({actualRealizedSavings >= 0 ? `+₹${actualRealizedSavings.toLocaleString('en-IN')}` : `-₹${Math.abs(actualRealizedSavings).toLocaleString('en-IN')}`})
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-300 bg-slate-950/80 p-2 rounded-lg border border-slate-800 line-clamp-2 overflow-hidden">
