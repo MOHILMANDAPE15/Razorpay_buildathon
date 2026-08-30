@@ -115,15 +115,6 @@ export default function HomePage() {
               Self-evolving AI that discovers, verifies, and deploys Python AST fraud rules in under 2 minutes—stopping courier RTO losses and protecting razor-thin e-commerce margins without manual rule engineering.
             </p>
           </div>
-
-          {/* Aegis Shield Brand Badge */}
-          <div className="hidden lg:flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm shrink-0 w-44 hover:shadow-md transition">
-            <div className="w-24 h-24 flex items-center justify-center overflow-hidden rounded-xl bg-slate-950/5">
-              <img src="/aegis-logo.png" alt="Aegis Shield Emblem" className="w-full h-full object-cover scale-135 transform" />
-            </div>
-            <span className="text-[10px] font-black text-slate-900 font-mono tracking-widest mt-2">AEGIS-RTO</span>
-            <span className="text-[8px] font-bold text-slate-500 font-mono tracking-wider">PROTECT · MONITOR · RESPOND</span>
-          </div>
         </div>
 
         {/* High-Impact Executive Profit & Performance KPI Grid */}
