@@ -13,12 +13,19 @@ import {
   RotateCcw,
   Sliders,
   X,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Play,
+  Pause,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { GLOSSARY, GlossaryEntry } from '@/lib/glossary';
 
 export default function ArchitectureDiagram() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<number>(1.0);
+  const [flowLights, setFlowLights] = useState<boolean>(true);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -30,6 +37,10 @@ export default function ArchitectureDiagram() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(1.5, Number((prev + 0.1).toFixed(1))));
+  const handleZoomOut = () => setZoom((prev) => Math.max(0.6, Number((prev - 0.1).toFixed(1))));
+  const handleResetZoom = () => setZoom(1.0);
 
   const activeEntry: GlossaryEntry | undefined = selectedKey ? GLOSSARY[selectedKey] : undefined;
 
@@ -49,8 +60,29 @@ export default function ArchitectureDiagram() {
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white shadow-xs p-6 sm:p-8 space-y-6 animate-fade-in font-sans relative">
-      {/* Header with Navigation Hint */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-5">
+      <style jsx global>{`
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 0.8; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.3); }
+        }
+        @keyframes flowDashForward {
+          from { stroke-dashoffset: 40; }
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes flowDashReverse {
+          from { stroke-dashoffset: 0; }
+          to { stroke-dashoffset: 40; }
+        }
+        .flow-line-forward {
+          animation: flowDashForward 1.2s linear infinite;
+        }
+        .flow-line-reverse {
+          animation: flowDashReverse 1.5s linear infinite;
+        }
+      `}</style>
+
+      {/* Header with Navigation Hint & Interactive Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
@@ -66,14 +98,61 @@ export default function ArchitectureDiagram() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-500 font-mono bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 shrink-0">
-          <span>↔ Pan / Scroll horizontally to explore complete loop tracks</span>
+        {/* Toolbar: Zoom Controls & Flow Lights Toggle */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {/* Flow Lights Toggle */}
+          <button
+            onClick={() => setFlowLights(!flowLights)}
+            className={clsx(
+              "px-3 py-1.5 rounded-xl border text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs",
+              flowLights 
+                ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+            )}
+            title="Toggle animated workflow lights"
+          >
+            <span className={clsx("w-2 h-2 rounded-full", flowLights ? "bg-emerald-500 animate-ping" : "bg-slate-400")} />
+            {flowLights ? 'Flow Lights: Active' : 'Flow Lights: Paused'}
+          </button>
+
+          {/* Zoom In/Out/Reset Toolbar */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-xs">
+            <button
+              onClick={handleZoomOut}
+              disabled={zoom <= 0.6}
+              className="p-1.5 rounded-lg bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <span className="px-2.5 text-xs font-mono font-bold text-slate-700 min-w-[50px] text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={handleZoomIn}
+              disabled={zoom >= 1.5}
+              className="p-1.5 rounded-lg bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-xs cursor-pointer"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleResetZoom}
+              className="p-1.5 ml-1 rounded-lg bg-white text-slate-700 hover:bg-slate-50 transition shadow-xs cursor-pointer"
+              title="Reset Zoom (100%)"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Horizontally Scrollable SVG Canvas Container */}
+      {/* Horizontally Scrollable SVG Canvas Container with Zoom Scale Support */}
       <div className="p-4 sm:p-6 rounded-2xl bg-slate-50 border border-slate-200 overflow-x-auto shadow-inner">
-        <div className="min-w-[1450px] max-w-[1500px] mx-auto relative">
+        <div 
+          className="min-w-[1450px] max-w-[1500px] mx-auto relative transition-transform duration-200 origin-top"
+          style={{ transform: `scale(${zoom})` }}
+        >
           <svg
             viewBox="0 0 1500 2720"
             className="w-full h-auto font-sans select-none overflow-visible"
@@ -110,20 +189,47 @@ export default function ArchitectureDiagram() {
                 <stop offset="70%" stopColor="#7c3aed" />
                 <stop offset="100%" stopColor="#059669" />
               </linearGradient>
+
+              {/* Light Particle Glow Filter */}
+              <filter id="glow-light" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
 
             {/* ========================================================================= */}
-            {/* RECURSIVE LOOP 3 (MAIN CLOSING PROMOTION LOOP): PROMOTED -> FROZEN ENSEMBLE */}
+            {/* RECURSIVE LOOP 3 (MAIN CLOSING PROMOTION LOOP): UNIFIED, CONTINUOUS PATH */}
+            {/* Starts from Promoted Champion bottom (750, 2455) -> (750, 2540) -> (1320, 2540) -> up to (1320, 217) -> enters Node 2 at (980, 217) */}
             {/* ========================================================================= */}
-            {/* Right track at x = 1320 */}
             <path
-              d="M 1010 2442 L 1320 2442 L 1320 217 L 980 217"
+              id="path-promotion-loop"
+              d="M 750 2455 L 750 2540 L 1320 2540 L 1320 217 L 980 217"
               stroke="url(#v-main-loop-gradient)"
               strokeWidth="4"
-              strokeDasharray="9 5"
+              strokeDasharray={flowLights ? "9 5" : "none"}
+              className={clsx(flowLights && "flow-line-reverse")}
               fill="none"
               markerEnd="url(#v-arr-loop)"
             />
+            {/* Origin Circle at Promoted Node exit */}
+            <circle cx="750" cy="2455" r="5" fill="#059669" />
+
+            {/* Animated Flow Light Particle traveling UP the Promotion Return Loop */}
+            {flowLights && (
+              <circle r="6" fill="#10b981" filter="url(#glow-light)">
+                <animateMotion
+                  path="M 750 2455 L 750 2540 L 1320 2540 L 1320 217 L 980 217"
+                  dur="4s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                />
+              </circle>
+            )}
+
             {/* Main Promotion Loop Condition Badge midway along track */}
             <g
               transform="translate(1320, 1050)"
@@ -155,13 +261,25 @@ export default function ArchitectureDiagram() {
             {/* ========================================================================= */}
             {/* Left track at x = 280 */}
             <path
+              id="path-evaluator-retry"
               d="M 510 1560 L 280 1560 L 280 1415 L 505 1415"
               stroke="#e11d48"
               strokeWidth="2.5"
-              strokeDasharray="6 4"
+              strokeDasharray={flowLights ? "6 4" : "none"}
+              className={clsx(flowLights && "flow-line-forward")}
               fill="none"
               markerEnd="url(#v-arr-rose)"
             />
+            {/* Flow light particle for syntax retry */}
+            {flowLights && (
+              <circle r="4.5" fill="#f43f5e" filter="url(#glow-light)">
+                <animateMotion
+                  path="M 510 1560 L 280 1560 L 280 1415 L 505 1415"
+                  dur="2.2s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            )}
             <g
               transform="translate(280, 1488)"
               className="cursor-pointer group"
@@ -189,13 +307,25 @@ export default function ArchitectureDiagram() {
             {/* ========================================================================= */}
             {/* Left track at x = 100 */}
             <path
+              id="path-regression-retry"
               d="M 510 1995 L 100 1995 L 100 1390 L 505 1390"
               stroke="#e11d48"
               strokeWidth="3"
-              strokeDasharray="7 5"
+              strokeDasharray={flowLights ? "7 5" : "none"}
+              className={clsx(flowLights && "flow-line-forward")}
               fill="none"
               markerEnd="url(#v-arr-rose)"
             />
+            {/* Flow light particle for regression retry */}
+            {flowLights && (
+              <circle r="5" fill="#e11d48" filter="url(#glow-light)">
+                <animateMotion
+                  path="M 510 1995 L 100 1995 L 100 1390 L 505 1390"
+                  dur="3s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            )}
             <g
               transform="translate(100, 1690)"
               className="cursor-pointer group"
@@ -248,6 +378,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 125 L 750 167" stroke="#64748b" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-slate)" />
             <rect x="718" y="136" width="64" height="20" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
             <text x="750" y="150" textAnchor="middle" className="text-[9.5px] fill-slate-600 font-mono font-bold">stream</text>
+            {flowLights && (
+              <circle r="4" fill="#6366f1" filter="url(#glow-light)">
+                <animateMotion path="M 750 125 L 750 167" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
 
             {/* ========================================================================= */}
@@ -276,6 +411,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 265 L 750 307" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
             <rect x="706" y="276" width="88" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
             <text x="750" y="290" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">score (&lt;10ms)</text>
+            {flowLights && (
+              <circle r="4.5" fill="#10b981" filter="url(#glow-light)">
+                <animateMotion path="M 750 265 L 750 307" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
 
             {/* ========================================================================= */}
@@ -313,6 +453,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 415 L 750 457" stroke="#0284c7" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-sky)" />
             <rect x="710" y="426" width="80" height="20" rx="4" fill="#f0f9ff" stroke="#bae6fd" strokeWidth="1.5" />
             <text x="750" y="440" textAnchor="middle" className="text-[9.5px] fill-sky-800 font-mono font-bold">log actions</text>
+            {flowLights && (
+              <circle r="4.5" fill="#0284c7" filter="url(#glow-light)">
+                <animateMotion path="M 750 415 L 750 457" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
 
             {/* ========================================================================= */}
@@ -478,15 +623,26 @@ export default function ArchitectureDiagram() {
 
 
             {/* ========================================================================= */}
-            {/* TRANSITION BUS: CONNECTING SENTINELS (330/590/850) -> GENERATOR (750) */}
+            {/* TRANSITION BUS: CONNECTING SENTINELS (490/750/1010) -> GENERATOR (750) */}
             {/* ========================================================================= */}
             {/* Clean, generously spaced transition band between Y = 1155 and Y = 1350 */}
-            <path d="M 490 765 L 490 1245 L 750 1245" stroke="#0284c7" strokeWidth="2" strokeDasharray="5 4" fill="none" />
-            <path d="M 750 765 L 750 1245" stroke="#7c3aed" strokeWidth="2" strokeDasharray="5 4" fill="none" />
+            <path d="M 490 765 L 490 1245 L 750 1245" stroke="#0284c7" strokeWidth="2" strokeDasharray={flowLights ? "5 4" : "none"} className={clsx(flowLights && "flow-line-forward")} fill="none" />
+            <path d="M 750 765 L 750 1245" stroke="#7c3aed" strokeWidth="2" strokeDasharray={flowLights ? "5 4" : "none"} className={clsx(flowLights && "flow-line-forward")} fill="none" />
             <path d="M 1010 1155 L 1010 1245 L 750 1245" stroke="#d97706" strokeWidth="3" fill="none" />
             
             {/* Feeder line continuing vertically down from Y = 1245 into Generator at Y = 1365 */}
             <path d="M 750 1245 L 750 1365" stroke="#7c3aed" strokeWidth="3" fill="none" markerEnd="url(#v-arr-purple)" />
+
+            {/* Pulsing Light particle from Residual Agenda into Generator */}
+            {flowLights && (
+              <circle r="5" fill="#f59e0b" filter="url(#glow-light)">
+                <animateMotion
+                  path="M 1010 1155 L 1010 1245 L 750 1245 L 750 1365"
+                  dur="2.5s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            )}
 
             {/* Pill Badge positioned in the open vertical space at Y = 1245 */}
             <g transform="translate(750, 1245)">
@@ -529,6 +685,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 1460 L 750 1505" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
             <rect x="700" y="1473" width="100" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
             <text x="750" y="1487" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">candidate AST</text>
+            {flowLights && (
+              <circle r="4" fill="#a855f7" filter="url(#glow-light)">
+                <animateMotion path="M 750 1460 L 750 1505" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
             {/* 6B. Evaluator Agent */}
             <g transform="translate(510, 1510)" className="cursor-pointer" onClick={() => handleNodeClick('evaluator')}>
@@ -553,6 +714,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 1600 L 750 1645" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
             <rect x="708" y="1613" width="84" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
             <text x="750" y="1627" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">valid AST</text>
+            {flowLights && (
+              <circle r="4" fill="#a855f7" filter="url(#glow-light)">
+                <animateMotion path="M 750 1600 L 750 1645" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
             {/* 6C. Reflector Agent */}
             <g transform="translate(510, 1650)" className="cursor-pointer" onClick={() => handleNodeClick('reflector')}>
@@ -577,6 +743,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 1740 L 750 1785" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
             <rect x="686" y="1753" width="128" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
             <text x="750" y="1767" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">diagnosed candidate</text>
+            {flowLights && (
+              <circle r="4" fill="#a855f7" filter="url(#glow-light)">
+                <animateMotion path="M 750 1740 L 750 1785" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
             {/* 6D. Selector & Ensemble Pruner */}
             <g transform="translate(510, 1790)" className="cursor-pointer" onClick={() => handleNodeClick('selector')}>
@@ -601,6 +772,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 1880 L 750 1925" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
             <rect x="676" y="1893" width="148" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
             <text x="750" y="1907" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">pareto ensemble candidate</text>
+            {flowLights && (
+              <circle r="4.5" fill="#10b981" filter="url(#glow-light)">
+                <animateMotion path="M 750 1880 L 750 1925" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
 
             {/* ========================================================================= */}
@@ -629,6 +805,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 2020 L 750 2065" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
             <rect x="666" y="2033" width="168" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
             <text x="750" y="2047" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">regression &lt; 5% [PASS]</text>
+            {flowLights && (
+              <circle r="4.5" fill="#10b981" filter="url(#glow-light)">
+                <animateMotion path="M 750 2020 L 750 2065" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
             {/* 6F. Gate 2: Held-Out Verification Gate */}
             <g transform="translate(510, 2070)" className="cursor-pointer" onClick={() => handleNodeClick('held_out_gate')}>
@@ -653,6 +834,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 2160 L 750 2205" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
             <rect x="666" y="2173" width="168" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
             <text x="750" y="2187" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">validation split [PASS]</text>
+            {flowLights && (
+              <circle r="4.5" fill="#10b981" filter="url(#glow-light)">
+                <animateMotion path="M 750 2160 L 750 2205" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
             {/* 6G. Gate 3: Decoy Guard & AST Security Audit */}
             <g transform="translate(510, 2210)" className="cursor-pointer" onClick={() => handleNodeClick('decoy_guard')}>
@@ -677,6 +863,11 @@ export default function ArchitectureDiagram() {
             <path d="M 750 2300 L 750 2345" stroke="#059669" strokeWidth="3" fill="none" markerEnd="url(#v-arr-emerald)" />
             <rect x="656" y="2313" width="188" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
             <text x="750" y="2327" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">all gates verified [PASS]</text>
+            {flowLights && (
+              <circle r="5" fill="#10b981" filter="url(#glow-light)">
+                <animateMotion path="M 750 2300 L 750 2345" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
 
 
             {/* ========================================================================= */}
@@ -706,10 +897,6 @@ export default function ArchitectureDiagram() {
                 </div>
               </foreignObject>
             </g>
-
-            {/* Connecting line 7 -> Closing Loop */}
-            <path d="M 750 2455 L 750 2515 L 1010 2515" stroke="#059669" strokeWidth="3.5" fill="none" />
-            <circle cx="750" cy="2455" r="4.5" fill="#059669" />
           </svg>
         </div>
       </div>
