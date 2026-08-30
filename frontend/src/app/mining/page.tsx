@@ -31,6 +31,8 @@ import {
   ClusterHistoryResponse,
   RejectedCandidate
 } from '@/lib/api';
+import { DiscoveredClustersBarChart } from '@/components/charts/DiscoveredClustersBarChart';
+import { SignificanceThresholdChart } from '@/components/charts/SignificanceThresholdChart';
 
 export default function ResidualMiningPage() {
   const [scanData, setScanData] = useState<ResidualMiningScanResponse | null>(null);
@@ -216,12 +218,21 @@ export default function ResidualMiningPage() {
         </div>
       </div>
 
+      {/* Visual Discovered Clusters Bar Chart */}
+      {clusters.length > 0 && (
+        <DiscoveredClustersBarChart
+          clusters={clusters}
+          selectedClusterId={selectedClusterId}
+          onSelectCluster={handleSelectCluster}
+        />
+      )}
+
       {/* Main Grid: Discovered Clusters */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <Layers className="w-5 h-5 text-purple-600" />
-            Discovered False Negative Clusters (Round {meta?.current_round || 3})
+            Discovered False Negative Signatures (Round {meta?.current_round || 3})
           </h2>
           <span className="text-xs text-slate-500">
             Click any cluster card to inspect full cross-scan timeline & cooldown history
@@ -261,42 +272,45 @@ export default function ResidualMiningPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {clusters.map((cluster) => {
+              const hyp = cluster.resulting_hypothesis;
+              const isSelected = selectedClusterId === cluster.cluster_id;
               const isAutonomous = cluster.is_autonomous_discovery;
               const isOnCooldown = cluster.status === 'on_cooldown';
               const isSurgeBypassed = cluster.status === 'bypassed_surge';
-              const hyp = cluster.resulting_hypothesis;
 
               return (
                 <div
                   key={cluster.cluster_id}
                   onClick={() => handleSelectCluster(cluster.cluster_id)}
                   className={clsx(
-                    'p-6 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between relative group hover:shadow-md',
-                    isAutonomous
-                      ? 'bg-purple-50/40 border-purple-300 hover:border-purple-400'
-                      : isOnCooldown
-                      ? 'bg-amber-50/30 border-amber-200 hover:border-amber-300'
-                      : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+                    'p-6 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group shadow-xs hover:shadow-md',
+                    isSelected
+                      ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/20'
+                      : 'border-slate-200 bg-white hover:border-purple-300'
                   )}
                 >
                   <div className="space-y-4">
-                    {/* Top Badges */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {isAutonomous && (
+                    {/* Top Status Strip */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {isAutonomous ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
                             <Sparkles className="w-3 h-3 text-purple-600" />
                             Autonomous Discovery
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                            Cluster #{cluster.cluster_id}
                           </span>
                         )}
 
                         {isOnCooldown ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
                             <Clock className="w-3 h-3 text-amber-600" />
-                            On Cooldown (Until R{cluster.cooldown_info.cooldown_until_round})
+                            On Cooldown (Until R{cluster.cooldown_info?.cooldown_until_round || 3})
                           </span>
                         ) : isSurgeBypassed ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1 animate-pulse">
                             <Flame className="w-3 h-3 text-rose-600" />
                             Surge Bypass Active (&gt;50% spike)
                           </span>
@@ -394,6 +408,9 @@ export default function ResidualMiningPage() {
           </div>
         )}
       </div>
+
+      {/* Visual Significance Threshold Plot */}
+      <SignificanceThresholdChart rejectedCandidates={rejected} />
 
       {/* Significance Guard Rejections Section */}
       <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
