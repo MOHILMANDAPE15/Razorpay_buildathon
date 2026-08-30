@@ -228,7 +228,7 @@ export function DiscoveredClustersBarChart({
                         {hyp.gate_verdict} ({actualRealizedSavings >= 0 ? `+₹${actualRealizedSavings.toLocaleString('en-IN')}` : `-₹${Math.abs(actualRealizedSavings).toLocaleString('en-IN')}`})
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-300 bg-slate-950/80 p-2 rounded-lg border border-slate-800 line-clamp-2 overflow-hidden">
+                    <div className="text-[11px] text-slate-200 bg-slate-950 p-2.5 rounded-lg border border-slate-800 max-h-24 overflow-x-auto overflow-y-auto whitespace-pre font-mono scrollbar-thin select-text">
                       {hyp.rule_code}
                     </div>
                   </div>

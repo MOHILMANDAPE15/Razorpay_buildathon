@@ -82,25 +82,11 @@ export default function ShadowControlPage() {
         <LifecycleBarChart />
       </div>
 
-      {/* 2. Financial 3-Way Outcome Matrix */}
+      {/* 2. Drift Shock & Recovery Trajectory Curve */}
       <div>
         <div className="mb-4">
           <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
-            2. Production 3-Way Policy Routing & Financial Balance
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Cost-weighted outcome breakdown across Auto-Block (High Risk), Review Queue (Ambiguous), and Auto-Approve (Clean).
-          </p>
-        </div>
-
-        <FinancialOutcomeMatrix />
-      </div>
-
-      {/* 3. Drift Shock & Recovery Trajectory Curve */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
-            3. Chronological Drift Shock & Autonomous Recovery Curve
+            2. Chronological Drift Shock & Autonomous Recovery Curve
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
             Visualizing the +246.16% recovery lift generated when the Residual Miner clustered unflagged drift patterns.
@@ -110,12 +96,26 @@ export default function ShadowControlPage() {
         <TrajectoryLineChart />
       </div>
 
-      {/* 3. Section 4.8 LightGBM Baseline Comparison (Neutral Framing) */}
+      {/* 3. Financial 3-Way Outcome Matrix */}
+      <div>
+        <div className="mb-4">
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
+            3. Production 3-Way Policy Routing & Financial Balance
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Cost-weighted outcome breakdown across Auto-Block (High Risk), Review Queue (Ambiguous), and Auto-Approve (Clean).
+          </p>
+        </div>
+
+        <FinancialOutcomeMatrix />
+      </div>
+
+      {/* 4. Section 4.8 LightGBM Baseline Comparison (Neutral Framing) */}
       <div className="space-y-5 pt-2">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
-              2. Section 4.8 GBDT Baseline Comparison
+              4. Section 4.8 GBDT Baseline Comparison
             </h2>
             <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono">
               Interpretable AST Rules vs. GBDT
