@@ -149,10 +149,10 @@ export default function ResidualMiningPage() {
         </span>
       </div>
 
-      {/* Header KPI Strip */}
+      {/* Header KPI Strip (Human-Friendly Terms) */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-medium block">Mature Orders Scanned</span>
+          <span className="text-xs text-slate-500 font-medium block">Delivered Orders Scanned</span>
           <div className="text-xl font-bold font-mono text-slate-900 mt-1">
             {loading || !meta ? (
               <span className="inline-block h-6 w-20 bg-slate-200 animate-pulse rounded-md mt-1" />
@@ -170,7 +170,7 @@ export default function ResidualMiningPage() {
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-medium block">Realized False Negatives</span>
+          <span className="text-xs text-slate-500 font-medium block">Uncaught Bounced Orders</span>
           <div className="text-xl font-bold font-mono text-rose-600 mt-1">
             {loading || !meta ? (
               <span className="inline-block h-6 w-16 bg-slate-200 animate-pulse rounded-md mt-1" />
@@ -178,11 +178,11 @@ export default function ResidualMiningPage() {
               meta.total_false_negatives.toLocaleString()
             )}
           </div>
-          <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">Unflagged RTO abuse</span>
+          <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">RTO fraud missed by old rules</span>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-medium block">False Negative Rate</span>
+          <span className="text-xs text-slate-500 font-medium block">Uncaught Miss Rate</span>
           <div className="text-xl font-bold font-mono text-amber-600 mt-1">
             {loading || !meta ? (
               <span className="inline-block h-6 w-16 bg-slate-200 animate-pulse rounded-md mt-1" />
@@ -194,7 +194,7 @@ export default function ResidualMiningPage() {
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-medium block">Significant Clusters</span>
+          <span className="text-xs text-slate-500 font-medium block">Verified Real Threats</span>
           <div className="text-xl font-bold font-mono text-purple-600 mt-1">
             {loading || !meta ? (
               <span className="inline-block h-6 w-10 bg-slate-200 animate-pulse rounded-md mt-1" />
@@ -202,11 +202,11 @@ export default function ResidualMiningPage() {
               clusters.length
             )}
           </div>
-          <span className="text-[11px] text-purple-600/80 font-mono mt-0.5 block">Passed Chi-Square p &lt; 0.05</span>
+          <span className="text-[11px] text-purple-600/80 font-mono mt-0.5 block">&gt;95% Statistical Certainty</span>
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs text-slate-500 font-medium block">Significance Guard Filtered</span>
+          <span className="text-xs text-slate-500 font-medium block">Fake Patterns Blocked</span>
           <div className="text-xl font-bold font-mono text-slate-700 mt-1">
             {loading || !meta ? (
               <span className="inline-block h-6 w-10 bg-slate-200 animate-pulse rounded-md mt-1" />
@@ -214,12 +214,29 @@ export default function ResidualMiningPage() {
               rejected.length
             )}
           </div>
-          <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">Blocked false discovery</span>
+          <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">Prevented random coincidences</span>
         </div>
       </div>
 
-      {/* Visual Discovered Clusters Bar Chart */}
-      {clusters.length > 0 && (
+      {/* Visual Discovered Clusters Component (Single Unified View) */}
+      {loading ? (
+        <div className="p-12 rounded-2xl bg-white border border-slate-200 text-center space-y-3 animate-pulse">
+          <div className="h-6 w-48 bg-slate-200 rounded mx-auto" />
+          <div className="h-4 w-96 bg-slate-100 rounded mx-auto" />
+        </div>
+      ) : clusters.length === 0 ? (
+        <div className="p-12 rounded-2xl bg-white border border-slate-200 text-center space-y-3">
+          <Activity className="w-8 h-8 text-slate-300 mx-auto" />
+          <p className="text-sm font-semibold text-slate-700">No unhandled fraud clusters found</p>
+          <p className="text-xs text-slate-500">Current champion ensemble has successfully mitigated all active fraud patterns.</p>
+          <button
+            onClick={() => loadScan(activeSplit)}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
+          >
+            Re-scan Split
+          </button>
+        </div>
+      ) : (
         <DiscoveredClustersBarChart
           clusters={clusters}
           selectedClusterId={selectedClusterId}
@@ -227,241 +244,8 @@ export default function ResidualMiningPage() {
         />
       )}
 
-      {/* Main Grid: Discovered Clusters */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-purple-600" />
-            Discovered False Negative Signatures (Round {meta?.current_round || 3})
-          </h2>
-          <span className="text-xs text-slate-500">
-            Click any cluster card to inspect full cross-scan timeline & cooldown history
-          </span>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-6 rounded-2xl border border-slate-200 bg-white shadow-xs space-y-4 animate-pulse">
-                <div className="flex justify-between items-center">
-                  <div className="h-4 w-32 bg-slate-200 rounded" />
-                  <div className="h-4 w-16 bg-slate-200 rounded" />
-                </div>
-                <div className="h-5 w-3/4 bg-slate-200 rounded" />
-                <div className="h-16 w-full bg-slate-100 rounded-xl" />
-                <div className="grid grid-cols-3 gap-2 pt-2">
-                  <div className="h-12 bg-slate-100 rounded-xl" />
-                  <div className="h-12 bg-slate-100 rounded-xl" />
-                  <div className="h-12 bg-slate-100 rounded-xl" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : clusters.length === 0 ? (
-          <div className="p-12 rounded-2xl bg-white border border-slate-200 text-center space-y-3">
-            <Activity className="w-8 h-8 text-slate-300 mx-auto" />
-            <p className="text-sm font-semibold text-slate-700">No unhandled false negative clusters found</p>
-            <p className="text-xs text-slate-500">Current champion ensemble has successfully mitigated known residual patterns.</p>
-            <button
-              onClick={() => loadScan(activeSplit)}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
-            >
-              Re-scan Split
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {clusters.map((cluster) => {
-              const hyp = cluster.resulting_hypothesis;
-              const isSelected = selectedClusterId === cluster.cluster_id;
-              const isAutonomous = cluster.is_autonomous_discovery;
-              const isOnCooldown = cluster.status === 'on_cooldown';
-              const isSurgeBypassed = cluster.status === 'bypassed_surge';
-
-              return (
-                <div
-                  key={cluster.cluster_id}
-                  onClick={() => handleSelectCluster(cluster.cluster_id)}
-                  className={clsx(
-                    'p-6 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between group shadow-xs hover:shadow-md',
-                    isSelected
-                      ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/20'
-                      : 'border-slate-200 bg-white hover:border-purple-300'
-                  )}
-                >
-                  <div className="space-y-4">
-                    {/* Top Status Strip */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {isAutonomous ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-purple-600" />
-                            Autonomous Discovery
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                            Cluster #{cluster.cluster_id}
-                          </span>
-                        )}
-
-                        {isOnCooldown ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-amber-600" />
-                            On Cooldown (Until R{cluster.cooldown_info?.cooldown_until_round || 3})
-                          </span>
-                        ) : isSurgeBypassed ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1 animate-pulse">
-                            <Flame className="w-3 h-3 text-rose-600" />
-                            Surge Bypass Active (&gt;50% spike)
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            Significant → Dispatched
-                          </span>
-                        )}
-
-                        <span className="text-[10px] font-mono text-slate-500">
-                          p={cluster.p_value.toFixed(4)}
-                        </span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition shrink-0" />
-                    </div>
-
-                    {/* Title & Signature */}
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-700 transition">
-                        {cluster.cluster_name}
-                      </h3>
-                      {isAutonomous && (
-                        <p className="text-[11px] text-purple-700 font-medium mt-0.5">
-                          * Mined dynamically with zero hand-coded static equivalent.
-                        </p>
-                      )}
-
-                      {/* Signature Tags */}
-                      <div className="flex flex-wrap gap-1.5 mt-2.5">
-                        {Object.entries(cluster.signature_patterns).map(([k, v]) => (
-                          <span
-                            key={k}
-                            className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200/80"
-                          >
-                            {k}={String(v)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-mono">
-                      <div>
-                        <span className="text-slate-500 text-[10px] block">Miss Volume:</span>
-                        <strong className="text-rose-600 font-bold">{cluster.miss_volume} orders</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 text-[10px] block">Cohort Size:</span>
-                        <strong className="text-slate-800 font-bold">{cluster.cohort_size}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 text-[10px] block">Statistical Lift:</span>
-                        <strong className="text-purple-700 font-bold">{cluster.statistical_lift}x</strong>
-                      </div>
-                    </div>
-
-                    {/* Resulting Hypothesis Synthesis Preview */}
-                    {hyp && (
-                      <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500 font-medium flex items-center gap-1.5">
-                            <Code2 className="w-3.5 h-3.5 text-indigo-600" />
-                            Synthesized Rule: <code className="font-mono text-slate-800">{hyp.hypothesis_id}</code>
-                          </span>
-                          <span
-                            className={clsx(
-                              'text-[10px] font-bold px-2 py-0.5 rounded-full',
-                              hyp.gate_verdict === 'PROMOTED'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                : 'bg-rose-100 text-rose-800 border border-rose-200'
-                            )}
-                          >
-                            {`${hyp.gate_verdict} (${hyp.net_financial_delta_inr >= 0 ? `+₹${hyp.net_financial_delta_inr.toLocaleString()}` : `-₹${Math.abs(hyp.net_financial_delta_inr).toLocaleString()}`})`}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-slate-600 font-mono bg-slate-50 p-2 rounded-lg border border-slate-100 line-clamp-2">
-                          {hyp.rule_code}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Footer Action */}
-                  <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs text-purple-700 font-semibold">
-                    <span className="flex items-center gap-1">
-                      <History className="w-3.5 h-3.5" />
-                      Inspect Lifecycle & Cooldown
-                    </span>
-                    <span className="text-slate-400 text-[11px]">Click to view</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Visual Significance Threshold Plot */}
+      {/* Visual Significance Threshold Plot (Explains Chi-Square & Protects GMV) */}
       <SignificanceThresholdChart rejectedCandidates={rejected} />
-
-      {/* Significance Guard Rejections Section */}
-      <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-emerald-600" />
-          <h3 className="text-base font-bold text-slate-900">
-            Statistical Significance Guard: Filtered Non-Significant Candidates
-          </h3>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-mono">
-            Working as Intended
-          </span>
-        </div>
-        <p className="text-xs text-slate-600 leading-relaxed max-w-4xl">
-          The significance guard rejects candidate feature combinations where <code className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">p &ge; 0.05</code> or cohort size &lt; 30. 
-          This prevents multiple-testing false discoveries and blocks circular decoy features from polluting the generator agenda.
-        </p>
-
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-4 rounded-xl bg-white border border-slate-200 space-y-2 text-xs animate-pulse">
-                <div className="flex justify-between items-center">
-                  <div className="h-4 w-40 bg-slate-200 rounded" />
-                  <div className="h-4 w-16 bg-slate-100 rounded" />
-                </div>
-                <div className="h-3 w-3/4 bg-slate-100 rounded" />
-                <div className="h-3 w-1/2 bg-slate-100 rounded" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-            {rejected.map((r, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-white border border-slate-200 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900">{r.cluster_name}</span>
-                  <span className="text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                    p = {r.p_value.toFixed(4)}
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-600 leading-snug">
-                  <strong>Reason:</strong> {r.rejection_reason}
-                </div>
-                <div className="text-[10px] text-slate-400 font-mono">
-                  Cohort: {r.cohort_size} orders | Misses: {r.miss_count} | Lift: {r.lift}x
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Slide-out Cluster History Modal / Drawer */}
       {selectedClusterId && (
