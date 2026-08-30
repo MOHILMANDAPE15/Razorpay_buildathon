@@ -75,9 +75,9 @@ export default function ArchitectureDiagram() {
       <div className="p-4 sm:p-6 rounded-2xl bg-slate-50 border border-slate-200 overflow-x-auto shadow-inner">
         <div className="min-w-[1450px] max-w-[1500px] mx-auto relative">
           <svg
-            viewBox="0 0 1500 2620"
+            viewBox="0 0 1500 2720"
             className="w-full h-auto font-sans select-none overflow-visible"
-            style={{ minHeight: '2620px' }}
+            style={{ minHeight: '2720px' }}
           >
             <defs>
               {/* Arrowhead Markers */}
@@ -117,7 +117,7 @@ export default function ArchitectureDiagram() {
             {/* ========================================================================= */}
             {/* Right track at x = 1320 */}
             <path
-              d="M 1010 2345 L 1320 2345 L 1320 217 L 980 217"
+              d="M 1010 2442 L 1320 2442 L 1320 217 L 980 217"
               stroke="url(#v-main-loop-gradient)"
               strokeWidth="4"
               strokeDasharray="9 5"
@@ -126,7 +126,7 @@ export default function ArchitectureDiagram() {
             />
             {/* Main Promotion Loop Condition Badge midway along track */}
             <g
-              transform="translate(1320, 930)"
+              transform="translate(1320, 1050)"
               className="cursor-pointer group"
               onClick={() => handleNodeClick('loop_promotion')}
             >
@@ -155,7 +155,7 @@ export default function ArchitectureDiagram() {
             {/* ========================================================================= */}
             {/* Left track at x = 280 */}
             <path
-              d="M 510 1450 L 280 1450 L 280 1315 L 505 1315"
+              d="M 510 1560 L 280 1560 L 280 1415 L 505 1415"
               stroke="#e11d48"
               strokeWidth="2.5"
               strokeDasharray="6 4"
@@ -163,7 +163,7 @@ export default function ArchitectureDiagram() {
               markerEnd="url(#v-arr-rose)"
             />
             <g
-              transform="translate(280, 1382)"
+              transform="translate(280, 1488)"
               className="cursor-pointer group"
               onClick={() => handleNodeClick('loop_syntax_fail')}
             >
@@ -189,7 +189,7 @@ export default function ArchitectureDiagram() {
             {/* ========================================================================= */}
             {/* Left track at x = 100 */}
             <path
-              d="M 510 1855 L 100 1855 L 100 1290 L 505 1290"
+              d="M 510 1995 L 100 1995 L 100 1390 L 505 1390"
               stroke="#e11d48"
               strokeWidth="3"
               strokeDasharray="7 5"
@@ -197,7 +197,7 @@ export default function ArchitectureDiagram() {
               markerEnd="url(#v-arr-rose)"
             />
             <g
-              transform="translate(100, 1570)"
+              transform="translate(100, 1690)"
               className="cursor-pointer group"
               onClick={() => handleNodeClick('loop_regression_fail')}
             >
@@ -347,7 +347,7 @@ export default function ArchitectureDiagram() {
             {/* SECTION 5: CONTINUOUS MONITORING & TRIGGER SENTINELS (3 PARALLEL BOXES) */}
             {/* ========================================================================= */}
             {/* Group container bounding box */}
-            <rect x="360" y="605" width="780" height="575" rx="22" fill="#fffbeb" fillOpacity="0.4" stroke="#fde68a" strokeWidth="2" strokeDasharray="5 5" />
+            <rect x="360" y="605" width="780" height="585" rx="22" fill="#fffbeb" fillOpacity="0.4" stroke="#fde68a" strokeWidth="2" strokeDasharray="5 5" />
             <text x="385" y="633" className="text-xs font-mono font-bold fill-amber-900 uppercase tracking-wide">
               5. Autonomous Adaptation Trigger Layer (Continuous Sentinels)
             </text>
@@ -476,15 +476,22 @@ export default function ArchitectureDiagram() {
               </foreignObject>
             </g>
 
-            {/* Connecting lines from Spike (490) & Drift (750) & Agenda (1010) into the Core Evolution Loop */}
-            <path d="M 490 765 L 490 1195 L 720 1195" stroke="#0284c7" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
-            <path d="M 750 765 L 750 1195" stroke="#7c3aed" strokeWidth="1.5" strokeDasharray="4 3" fill="none" />
-            {/* Explicit direct connecting line from Residual Miner Agenda (1010, 1155) -> Generator (750, 1260) */}
-            <path d="M 1010 1155 L 1010 1215 L 750 1215 L 750 1255" stroke="#d97706" strokeWidth="3" fill="none" markerEnd="url(#v-arr-purple)" />
+
+            {/* ========================================================================= */}
+            {/* TRANSITION BUS: CONNECTING SENTINELS (330/590/850) -> GENERATOR (750) */}
+            {/* ========================================================================= */}
+            {/* Clean, generously spaced transition band between Y = 1155 and Y = 1350 */}
+            <path d="M 490 765 L 490 1245 L 750 1245" stroke="#0284c7" strokeWidth="2" strokeDasharray="5 4" fill="none" />
+            <path d="M 750 765 L 750 1245" stroke="#7c3aed" strokeWidth="2" strokeDasharray="5 4" fill="none" />
+            <path d="M 1010 1155 L 1010 1245 L 750 1245" stroke="#d97706" strokeWidth="3" fill="none" />
             
-            <g transform="translate(750, 1215)">
-              <rect x="-120" y="-13" width="240" height="26" rx="13" fill="#fffbeb" stroke="#d97706" strokeWidth="1.5" className="shadow-xs" />
-              <text x="0" y="4" textAnchor="middle" className="text-[10px] fill-amber-900 font-mono font-bold">
+            {/* Feeder line continuing vertically down from Y = 1245 into Generator at Y = 1365 */}
+            <path d="M 750 1245 L 750 1365" stroke="#7c3aed" strokeWidth="3" fill="none" markerEnd="url(#v-arr-purple)" />
+
+            {/* Pill Badge positioned in the open vertical space at Y = 1245 */}
+            <g transform="translate(750, 1245)">
+              <rect x="-130" y="-14" width="260" height="28" rx="14" fill="#fffbeb" stroke="#d97706" strokeWidth="2" className="shadow-md" />
+              <text x="0" y="5" textAnchor="middle" className="text-[10.5px] fill-amber-950 font-mono font-black tracking-wide">
                 feeds agenda into Generator ▾
               </text>
             </g>
@@ -493,14 +500,14 @@ export default function ArchitectureDiagram() {
             {/* ========================================================================= */}
             {/* SECTION 6: CORE MULTI-AGENT EVOLUTION LOOP & VERIFICATION GATES */}
             {/* ========================================================================= */}
-            {/* Group container bounding box */}
-            <rect x="450" y="1225" width="600" height="1320" rx="24" fill="#faf5ff" fillOpacity="0.5" stroke="#e9d5ff" strokeWidth="2" strokeDasharray="5 5" />
-            <text x="475" y="1252" className="text-xs font-mono font-bold fill-purple-950 uppercase tracking-wide">
+            {/* Group container bounding box shifted down to Y = 1315 */}
+            <rect x="450" y="1315" width="600" height="1235" rx="24" fill="#faf5ff" fillOpacity="0.5" stroke="#e9d5ff" strokeWidth="2" strokeDasharray="5 5" />
+            <text x="475" y="1345" className="text-xs font-mono font-bold fill-purple-950 uppercase tracking-wide">
               6. Core Multi-Agent Evolution Loop &amp; Safety Verification Gates
             </text>
 
             {/* 6A. Generator Agent */}
-            <g transform="translate(510, 1265)" className="cursor-pointer" onClick={() => handleNodeClick('generator')}>
+            <g transform="translate(510, 1370)" className="cursor-pointer" onClick={() => handleNodeClick('generator')}>
               <foreignObject width="480" height="90">
                 <div className="w-full h-full p-4 rounded-2xl bg-white border-2 border-purple-500 shadow-xs flex items-center justify-between hover:border-purple-700 hover:shadow-md transition">
                   <div className="space-y-1">
@@ -519,12 +526,12 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 6A -> 6B */}
-            <path d="M 750 1355 L 750 1392" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
-            <rect x="700" y="1364" width="100" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
-            <text x="750" y="1378" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">candidate AST</text>
+            <path d="M 750 1460 L 750 1505" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
+            <rect x="700" y="1473" width="100" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
+            <text x="750" y="1487" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">candidate AST</text>
 
             {/* 6B. Evaluator Agent */}
-            <g transform="translate(510, 1395)" className="cursor-pointer" onClick={() => handleNodeClick('evaluator')}>
+            <g transform="translate(510, 1510)" className="cursor-pointer" onClick={() => handleNodeClick('evaluator')}>
               <foreignObject width="480" height="90">
                 <div className="w-full h-full p-4 rounded-2xl bg-white border-2 border-purple-500 shadow-xs flex items-center justify-between hover:border-purple-700 hover:shadow-md transition">
                   <div className="space-y-1">
@@ -543,12 +550,12 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 6B -> 6C */}
-            <path d="M 750 1485 L 750 1522" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
-            <rect x="708" y="1494" width="84" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
-            <text x="750" y="1508" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">valid AST</text>
+            <path d="M 750 1600 L 750 1645" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
+            <rect x="708" y="1613" width="84" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
+            <text x="750" y="1627" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">valid AST</text>
 
             {/* 6C. Reflector Agent */}
-            <g transform="translate(510, 1525)" className="cursor-pointer" onClick={() => handleNodeClick('reflector')}>
+            <g transform="translate(510, 1650)" className="cursor-pointer" onClick={() => handleNodeClick('reflector')}>
               <foreignObject width="480" height="90">
                 <div className="w-full h-full p-4 rounded-2xl bg-white border-2 border-purple-500 shadow-xs flex items-center justify-between hover:border-purple-700 hover:shadow-md transition">
                   <div className="space-y-1">
@@ -567,12 +574,12 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 6C -> 6D */}
-            <path d="M 750 1615 L 750 1652" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
-            <rect x="686" y="1624" width="128" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
-            <text x="750" y="1638" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">diagnosed candidate</text>
+            <path d="M 750 1740 L 750 1785" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
+            <rect x="686" y="1753" width="128" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
+            <text x="750" y="1767" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">diagnosed candidate</text>
 
             {/* 6D. Selector & Ensemble Pruner */}
-            <g transform="translate(510, 1655)" className="cursor-pointer" onClick={() => handleNodeClick('selector')}>
+            <g transform="translate(510, 1790)" className="cursor-pointer" onClick={() => handleNodeClick('selector')}>
               <foreignObject width="480" height="90">
                 <div className="w-full h-full p-4 rounded-2xl bg-white border-2 border-purple-500 shadow-xs flex items-center justify-between hover:border-purple-700 hover:shadow-md transition">
                   <div className="space-y-1">
@@ -591,16 +598,16 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 6D -> 6E */}
-            <path d="M 750 1745 L 750 1782" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
-            <rect x="676" y="1754" width="148" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
-            <text x="750" y="1768" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">pareto ensemble candidate</text>
+            <path d="M 750 1880 L 750 1925" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
+            <rect x="676" y="1893" width="148" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
+            <text x="750" y="1907" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">pareto ensemble candidate</text>
 
 
             {/* ========================================================================= */}
             {/* SAFETY VERIFICATION GATES (GATES 1, 2, 3) */}
             {/* ========================================================================= */}
             {/* 6E. Gate 1: Regression Gate */}
-            <g transform="translate(510, 1785)" className="cursor-pointer" onClick={() => handleNodeClick('regression_gate')}>
+            <g transform="translate(510, 1930)" className="cursor-pointer" onClick={() => handleNodeClick('regression_gate')}>
               <foreignObject width="480" height="90">
                 <div className="w-full h-full p-4 rounded-2xl bg-white border-2 border-emerald-500 shadow-xs flex items-center justify-between hover:border-emerald-700 hover:shadow-md transition">
                   <div className="space-y-1">
@@ -619,12 +626,12 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 6E -> 6F */}
-            <path d="M 750 1875 L 750 1912" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
-            <rect x="666" y="1884" width="168" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
-            <text x="750" y="1898" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">regression &lt; 5% [PASS]</text>
+            <path d="M 750 2020 L 750 2065" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
+            <rect x="666" y="2033" width="168" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
+            <text x="750" y="2047" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">regression &lt; 5% [PASS]</text>
 
             {/* 6F. Gate 2: Held-Out Verification Gate */}
-            <g transform="translate(510, 1915)" className="cursor-pointer" onClick={() => handleNodeClick('held_out_gate')}>
+            <g transform="translate(510, 2070)" className="cursor-pointer" onClick={() => handleNodeClick('held_out_gate')}>
               <foreignObject width="480" height="90">
                 <div className="w-full h-full p-4 rounded-2xl bg-white border-2 border-emerald-500 shadow-xs flex items-center justify-between hover:border-emerald-700 hover:shadow-md transition">
                   <div className="space-y-1">
@@ -643,12 +650,12 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 6F -> 6G */}
-            <path d="M 750 2005 L 750 2042" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
-            <rect x="666" y="2014" width="168" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
-            <text x="750" y="2028" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">validation split [PASS]</text>
+            <path d="M 750 2160 L 750 2205" stroke="#059669" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-emerald)" />
+            <rect x="666" y="2173" width="168" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
+            <text x="750" y="2187" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">validation split [PASS]</text>
 
             {/* 6G. Gate 3: Decoy Guard & AST Security Audit */}
-            <g transform="translate(510, 2045)" className="cursor-pointer" onClick={() => handleNodeClick('decoy_guard')}>
+            <g transform="translate(510, 2210)" className="cursor-pointer" onClick={() => handleNodeClick('decoy_guard')}>
               <foreignObject width="480" height="90">
                 <div className="w-full h-full p-4 rounded-2xl bg-white border-2 border-indigo-500 shadow-xs flex items-center justify-between hover:border-indigo-700 hover:shadow-md transition">
                   <div className="space-y-1">
@@ -667,16 +674,16 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 6G -> 7 */}
-            <path d="M 750 2135 L 750 2177" stroke="#059669" strokeWidth="3" fill="none" markerEnd="url(#v-arr-emerald)" />
-            <rect x="656" y="2146" width="188" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
-            <text x="750" y="2160" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">all gates verified [PASS]</text>
+            <path d="M 750 2300 L 750 2345" stroke="#059669" strokeWidth="3" fill="none" markerEnd="url(#v-arr-emerald)" />
+            <rect x="656" y="2313" width="188" height="20" rx="4" fill="#ecfdf5" stroke="#a7f3d0" strokeWidth="1.5" />
+            <text x="750" y="2327" textAnchor="middle" className="text-[9.5px] fill-emerald-800 font-mono font-bold">all gates verified [PASS]</text>
 
 
             {/* ========================================================================= */}
             {/* SECTION 7: PROMOTED CHAMPION ENSEMBLE */}
             {/* ========================================================================= */}
             {/* 7. Promoted Rule */}
-            <g transform="translate(490, 2180)" className="cursor-pointer" onClick={() => handleNodeClick('promoted_ensemble')}>
+            <g transform="translate(490, 2350)" className="cursor-pointer" onClick={() => handleNodeClick('promoted_ensemble')}>
               <foreignObject width="520" height="105">
                 <div className="w-full h-full p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-xl flex items-center justify-between border-2 border-emerald-400 hover:scale-[1.01] transition">
                   <div className="space-y-1">
@@ -701,8 +708,8 @@ export default function ArchitectureDiagram() {
             </g>
 
             {/* Connecting line 7 -> Closing Loop */}
-            <path d="M 750 2285 L 750 2345 L 1010 2345" stroke="#059669" strokeWidth="3.5" fill="none" />
-            <circle cx="750" cy="2285" r="4.5" fill="#059669" />
+            <path d="M 750 2455 L 750 2515 L 1010 2515" stroke="#059669" strokeWidth="3.5" fill="none" />
+            <circle cx="750" cy="2455" r="4.5" fill="#059669" />
           </svg>
         </div>
       </div>
