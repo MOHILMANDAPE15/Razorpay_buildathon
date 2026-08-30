@@ -9,9 +9,11 @@ from sqlalchemy.orm import Session
 from app.data.loader import load_train_data, load_validation_data
 from app.db.models import MissClusterCooldown, Hypothesis, EvaluationReportModel
 from app.db.session import get_db
+from app.engine.evaluator import CostWeightedEvaluator
 from app.engine.frozen_rule_snapshot import load_frozen_v1_rules
 from app.engine.residual_miner import ResidualMiner, TargetedMissCluster, RejectedClusterCandidate
 from app.engine.selector import EnsembleRule
+from app.engine.types import RuleHypothesis
 
 router = APIRouter(prefix="/residual-mining", tags=["Residual Mining & Cooldowns"])
 
@@ -52,156 +54,94 @@ def get_latest_residual_scan(
             db_session=db,
         )
 
-        # Seed realistic hypotheses & gate results for discovered clusters based on split
-        if split == "training":
-            hypotheses_map = {
-                "cluster_dyn_promo_cod_velocity": {
-                    "hypothesis_id": "hyp_r3_3_f4b4",
-                    "name": "Promotional COD Burst Defense",
-                    "rule_code": (
-                        "def rule_promo_cod_burst(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and order.get('promo_code_used') is True\n"
-                        "        and order.get('device_order_count_24h', 1) >= 2\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "PROMOTED",
-                    "net_financial_delta_inr": 6480.00,
-                    "precision": 0.6500,
-                    "recall": 0.0820,
-                    "true_positives": 78,
-                    "false_positives": 42,
-                },
-                "cluster_dyn_late_night_pincode_cod": {
-                    "hypothesis_id": "hyp_r2_3_bd99",
-                    "name": "Late-Night Metro High-Risk COD Shield",
-                    "rule_code": (
-                        "def rule_late_night_pincode_cod(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and (order.get('order_hour', 12) >= 22 or order.get('order_hour', 12) <= 5)\n"
-                        "        and order.get('pincode_rolling_rto_rate', 0.0) >= 0.28\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "PROMOTED",
-                    "net_financial_delta_inr": 3940.00,
-                    "precision": 0.5850,
-                    "recall": 0.0560,
-                    "true_positives": 52,
-                    "false_positives": 37,
-                },
-                "cluster_dyn_low_value_first_time_cod": {
-                    "hypothesis_id": "hyp_r2_1_c882",
-                    "name": "Low-Value First-Time COD Impulse Defense",
-                    "rule_code": (
-                        "def rule_low_val_first_time_cod(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and order.get('order_value', 1000) <= 600\n"
-                        "        and order.get('customer_prior_orders', 0) == 0\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "REJECTED_BY_COST_GATE",
-                    "net_financial_delta_inr": -620.50,
-                    "precision": 0.2350,
-                    "recall": 0.0510,
-                    "true_positives": 18,
-                    "false_positives": 59,
-                },
-                "cluster_dyn_new_account_high_val_cod": {
-                    "hypothesis_id": "hyp_dyn_01_auto",
-                    "name": "New Account High-Value COD Impulse Defense",
-                    "rule_code": (
-                        "def rule_new_account_high_val_cod(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and order.get('customer_account_age_days', 100) <= 2\n"
-                        "        and order.get('order_value', 1000) >= 2500\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "PROMOTED",
-                    "net_financial_delta_inr": 5820.00,
-                    "precision": 0.7045,
-                    "recall": 0.0650,
-                    "true_positives": 62,
-                    "false_positives": 26,
-                },
-            }
-        else:
-            hypotheses_map = {
-                "cluster_dyn_promo_cod_velocity": {
-                    "hypothesis_id": "hyp_r3_3_f4b4",
-                    "name": "Promotional COD Burst Defense",
-                    "rule_code": (
-                        "def rule_promo_cod_burst(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and order.get('promo_code_used') is True\n"
-                        "        and order.get('device_order_count_24h', 1) >= 2\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "PROMOTED",
-                    "net_financial_delta_inr": 2715.40,
-                    "precision": 0.5833,
-                    "recall": 0.0612,
-                    "true_positives": 35,
-                    "false_positives": 25,
-                },
-                "cluster_dyn_late_night_pincode_cod": {
-                    "hypothesis_id": "hyp_r2_3_bd99",
-                    "name": "Late-Night Metro High-Risk COD Shield",
-                    "rule_code": (
-                        "def rule_late_night_pincode_cod(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and (order.get('order_hour', 12) >= 22 or order.get('order_hour', 12) <= 5)\n"
-                        "        and order.get('pincode_rolling_rto_rate', 0.0) >= 0.28\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "PROMOTED",
-                    "net_financial_delta_inr": 1845.20,
-                    "precision": 0.5217,
-                    "recall": 0.0420,
-                    "true_positives": 24,
-                    "false_positives": 22,
-                },
-                "cluster_dyn_low_value_first_time_cod": {
-                    "hypothesis_id": "hyp_r2_1_c882",
-                    "name": "Low-Value First-Time COD Impulse Defense",
-                    "rule_code": (
-                        "def rule_low_val_first_time_cod(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and order.get('order_value', 1000) <= 600\n"
-                        "        and order.get('customer_prior_orders', 0) == 0\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "REJECTED_BY_COST_GATE",
-                    "net_financial_delta_inr": -620.50,
-                    "precision": 0.2350,
-                    "recall": 0.0510,
-                    "true_positives": 18,
-                    "false_positives": 59,
-                },
-                "cluster_dyn_new_account_high_val_cod": {
-                    "hypothesis_id": "hyp_dyn_01_auto",
-                    "name": "New Account High-Value COD Impulse Defense",
-                    "rule_code": (
-                        "def rule_new_account_high_val_cod(order: dict) -> bool:\n"
-                        "    return (\n"
-                        "        order.get('payment_mode') == 'COD'\n"
-                        "        and order.get('customer_account_age_days', 100) <= 2\n"
-                        "        and order.get('order_value', 1000) >= 2500\n"
-                        "    )"
-                    ),
-                    "gate_verdict": "PROMOTED",
-                    "net_financial_delta_inr": 3120.80,
-                    "precision": 0.6400,
-                    "recall": 0.0380,
-                    "true_positives": 32,
-                    "false_positives": 18,
-                },
+        # Candidate rules catalog targeting discovered clusters
+        candidate_rules_catalog = {
+            "cluster_dyn_promo_cod_velocity": {
+                "hypothesis_id": "hyp_r3_3_f4b4",
+                "name": "Promotional COD Burst Defense",
+                "rule_code": (
+                    "def rule_promo_cod_burst(order: dict) -> bool:\n"
+                    "    return (\n"
+                    "        order.get('payment_mode') == 'COD'\n"
+                    "        and order.get('promo_code_used') is True\n"
+                    "        and order.get('device_order_count_24h', 1) >= 2\n"
+                    "    )"
+                ),
+            },
+            "cluster_dyn_late_night_pincode_cod": {
+                "hypothesis_id": "hyp_r2_3_bd99",
+                "name": "Late-Night Metro High-Risk COD Shield",
+                "rule_code": (
+                    "def rule_late_night_pincode_cod(order: dict) -> bool:\n"
+                    "    return (\n"
+                    "        order.get('payment_mode') == 'COD'\n"
+                    "        and (order.get('order_hour', 12) >= 22 or order.get('order_hour', 12) <= 5)\n"
+                    "        and order.get('pincode_rolling_rto_rate', 0.0) >= 0.28\n"
+                    "    )"
+                ),
+            },
+            "cluster_dyn_low_value_first_time_cod": {
+                "hypothesis_id": "hyp_r2_1_c882",
+                "name": "Low-Value First-Time COD Impulse Defense",
+                "rule_code": (
+                    "def rule_low_val_first_time_cod(order: dict) -> bool:\n"
+                    "    return (\n"
+                    "        order.get('payment_mode') == 'COD'\n"
+                    "        and order.get('order_value', 1000) <= 600\n"
+                    "        and order.get('customer_prior_orders', 0) == 0\n"
+                    "    )"
+                ),
+            },
+            "cluster_dyn_new_account_high_val_cod": {
+                "hypothesis_id": "hyp_dyn_01_auto",
+                "name": "New Account High-Value COD Impulse Defense",
+                "rule_code": (
+                    "def rule_new_account_high_val_cod(order: dict) -> bool:\n"
+                    "    return (\n"
+                    "        order.get('payment_mode') == 'COD'\n"
+                    "        and order.get('customer_account_age_days', 100) <= 2\n"
+                    "        and order.get('order_value', 1000) >= 2500\n"
+                    "    )"
+                ),
+            },
+        }
+
+        # Dynamically evaluate each candidate rule on the active dataset split
+        evaluator = CostWeightedEvaluator()
+        hypotheses_map = {}
+        for c_id, r_info in candidate_rules_catalog.items():
+            hyp_obj = RuleHypothesis(
+                id=r_info["hypothesis_id"],
+                name=r_info["name"],
+                code=r_info["rule_code"],
+                generation_round=current_round,
+            )
+            report_eval = evaluator.evaluate_hypothesis(hyp_obj, df_orders)
+            if report_eval.is_valid and report_eval.cost_metrics and report_eval.standard_metrics:
+                net_delta = report_eval.cost_metrics.net_financial_savings_inr
+                tp = report_eval.standard_metrics.true_positives
+                fp = report_eval.standard_metrics.false_positives
+                precision = report_eval.standard_metrics.precision
+                recall = report_eval.standard_metrics.recall
+                verdict = "PROMOTED" if net_delta > 0 else "REJECTED_BY_COST_GATE"
+            else:
+                net_delta = 0.0
+                tp = 0
+                fp = 0
+                precision = 0.0
+                recall = 0.0
+                verdict = "REJECTED_BY_COST_GATE"
+
+            hypotheses_map[c_id] = {
+                "hypothesis_id": r_info["hypothesis_id"],
+                "name": r_info["name"],
+                "rule_code": r_info["rule_code"],
+                "gate_verdict": verdict,
+                "net_financial_delta_inr": round(net_delta, 2),
+                "precision": round(precision, 4),
+                "recall": round(recall, 4),
+                "true_positives": tp,
+                "false_positives": fp,
             }
 
         # Build enriched clusters response

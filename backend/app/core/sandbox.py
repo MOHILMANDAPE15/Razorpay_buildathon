@@ -184,8 +184,13 @@ def execute_rule_sandboxed(
 
         try:
             raw_result = target_func(df_clean.copy())
-        except Exception as e:
-            raise RuleExecutionError(f"Runtime error during rule execution: {str(e)}") from e
+        except Exception:
+            try:
+                # Row-by-row dictionary fallback for single-order AST rules
+                records = df_clean.to_dict(orient="records")
+                raw_result = np.array([1 if target_func(r) else 0 for r in records], dtype=int)
+            except Exception as e:
+                raise RuleExecutionError(f"Runtime error during rule execution: {str(e)}") from e
 
         # Normalize output to 1D binary numpy array
         try:
