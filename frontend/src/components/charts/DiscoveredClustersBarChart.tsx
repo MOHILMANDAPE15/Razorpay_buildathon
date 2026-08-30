@@ -152,38 +152,39 @@ export function DiscoveredClustersBarChart({
                   </div>
                 </div>
 
-                {/* Proportional Visual Bars (Nesting: Misses as % of Group) */}
-                <div className="space-y-3 pt-1">
-                  {/* Total Traffic Group Bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono">
-                      <span className="text-slate-500 text-[11px]">Total Matching Group Orders:</span>
-                      <span className="font-bold text-purple-900">{cluster.cohort_size} orders</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-purple-200">
-                      <div
-                        className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, Math.max(15, (cluster.cohort_size / 2600) * 100))}%` }}
-                      />
-                    </div>
+                {/* Dynamic 100% Stacked Cohort Breakdown Bar */}
+                <div className="space-y-2 pt-1 font-mono text-xs">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-500 font-semibold">Group Traffic Composition:</span>
+                    <span className="font-bold text-slate-800">{cluster.cohort_size} Matching Orders</span>
                   </div>
 
-                  {/* Bounced Misses Bar (Proportionate: e.g. 38.2% of group) */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-mono">
-                      <span className="text-slate-500 text-[11px]">
-                        Bounced / RTO Orders in Group:
-                      </span>
-                      <span className="font-bold text-rose-600">
-                        {cluster.miss_volume} orders ({cluster.miss_percentage_of_cohort.toFixed(1)}% bounce rate)
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-rose-200">
-                      <div
-                        className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${bounceProportionPct}%` }}
-                      />
-                    </div>
+                  {/* Multi-segment full-width stacked bar */}
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden flex border border-slate-200 shadow-2xs">
+                    {/* Bounced / RTO Segment */}
+                    <div
+                      className="bg-gradient-to-r from-rose-500 to-pink-500 h-full transition-all duration-500"
+                      style={{ width: `${cluster.miss_percentage_of_cohort}%` }}
+                      title={`Bounced / RTO: ${cluster.miss_volume} orders (${cluster.miss_percentage_of_cohort.toFixed(1)}%)`}
+                    />
+                    {/* Clean Delivered Segment */}
+                    <div
+                      className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-500"
+                      style={{ width: `${100 - cluster.miss_percentage_of_cohort}%` }}
+                      title={`Clean Delivered: ${cluster.cohort_size - cluster.miss_volume} orders (${(100 - cluster.miss_percentage_of_cohort).toFixed(1)}%)`}
+                    />
+                  </div>
+
+                  {/* Dynamic Legend */}
+                  <div className="flex justify-between items-center text-[10.5px] pt-0.5">
+                    <span className="flex items-center gap-1.5 text-rose-700 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+                      {cluster.miss_volume} Bounced ({cluster.miss_percentage_of_cohort.toFixed(1)}%)
+                    </span>
+                    <span className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                      {cluster.cohort_size - cluster.miss_volume} Clean ({(100 - cluster.miss_percentage_of_cohort).toFixed(1)}%)
+                    </span>
                   </div>
                 </div>
 
