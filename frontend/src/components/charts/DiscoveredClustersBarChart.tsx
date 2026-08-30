@@ -160,13 +160,11 @@ export function DiscoveredClustersBarChart({
                       <span className="text-slate-500 text-[11px]">Total Matching Group Orders:</span>
                       <span className="font-bold text-purple-900">{cluster.cohort_size} orders</span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-purple-200">
+                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-purple-200">
                       <div
-                        className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1 text-[9px] text-white font-mono font-bold"
-                        style={{ width: `${cohortBarWidthPct}%` }}
-                      >
-                        100% of Group
-                      </div>
+                        className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.max(15, (cluster.cohort_size / 2600) * 100))}%` }}
+                      />
                     </div>
                   </div>
 
@@ -177,16 +175,14 @@ export function DiscoveredClustersBarChart({
                         Bounced / RTO Orders in Group:
                       </span>
                       <span className="font-bold text-rose-600">
-                        {cluster.miss_volume} orders ({cluster.miss_percentage_of_cohort.toFixed(1)}%)
+                        {cluster.miss_volume} orders ({cluster.miss_percentage_of_cohort.toFixed(1)}% bounce rate)
                       </span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-rose-200">
+                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-rose-200">
                       <div
-                        className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-1.5 text-[9px] text-white font-mono font-bold"
+                        className="bg-gradient-to-r from-rose-500 to-pink-500 h-full rounded-full transition-all duration-500"
                         style={{ width: `${bounceProportionPct}%` }}
-                      >
-                        {cluster.miss_percentage_of_cohort.toFixed(0)}%
-                      </div>
+                      />
                     </div>
                   </div>
                 </div>
