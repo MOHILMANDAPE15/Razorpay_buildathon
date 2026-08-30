@@ -61,11 +61,11 @@ def _load_shadow_context() -> Dict[str, Any]:
 
 
 _EVASION_PATTERNS = [
-    r"how (can|do|would) (i|an order|a buyer|fraudster) (avoid|bypass|evade|circumvent|trick|cheat)",
-    r"how to (avoid|bypass|evade|circumvent|trick|beat) (being flagged|detection|aegis|the rules|the model|the filter)",
+    r"how (can|do|would|to) (i|an? order|an? buyer|an? fraudster|an? attacker|anyone|users?)? ?(avoid|bypass|evade|circumvent|trick|cheat|beat)",
+    r"how to (avoid|bypass|evade|circumvent|trick|beat) (being flagged|detection|aegis|the rules|the model|the filter|cod verification|fraud check)",
+    r"(bypass|evade|circumvent|cheat|trick) (aegis|fraud|detection|the rules|cod|verification)",
     r"how to prevent being blocked",
-    r"give me a way to place fraud orders without getting caught",
-    r"how to bypass rto detection",
+    r"place fraud orders without getting caught",
     r"ways to evade fraud detection",
     r"instructions to trick cod verification",
 ]
@@ -76,6 +76,274 @@ _DEFENSE_REFUSAL_MESSAGE = (
     "I can, however, explain how Aegis evaluates risk signals, maintains cost-weighted "
     "acceptance gates, balances the auto-decision trade-off, or handles distribution drift."
 )
+
+
+def _check_evasion_query(query: str) -> bool:
+    """Checks if query is attempting to solicit detection-evasion advice."""
+    q = query.lower()
+    for pat in _EVASION_PATTERNS:
+        if re.search(pat, q):
+            return True
+    return False
+
+
+def _get_fallback_reply(query: str) -> str:
+    """Provides high-quality, comprehensive architectural and mathematical fallback replies if LLM is offline or timed out."""
+    q = query.lower()
+
+    if _check_evasion_query(q):
+        return _DEFENSE_REFUSAL_MESSAGE
+
+    # 1. Cooldown Mechanism & Surge Bypass
+    if "cool down" in q or "cooldown" in q or "suppress" in q:
+        return (
+            "**Cooldown Mechanism (Section 4.6) & Surge Bypass**\n\n"
+            "• **What it does**: When the Residual Miner discovers an unflagged false negative cluster and synthesizes a candidate rule, that feature signature enters a **3-round cooldown suppression window**.\n"
+            "• **Why it's essential**: Prevents the Generator-Reflector loop from churning duplicate, circular rules on the same static residual pool across consecutive rounds, preserving LLM compute for novel fraud signatures.\n"
+            "• **Surge Bypass Exception**: If an active cooled-down cluster suddenly experiences a **>50% volume spike** (or >15 orders in validation), the cooldown is immediately bypassed so the system can mount an emergency defense against evolving fraud waves.\n\n"
+            "In production, cooldown statuses are tracked dynamically via `GET /api/v1/residual-mining/cooldown-status`."
+        )
+
+    # 2. LightGBM / GBDT Baseline Comparison (Checked early to avoid generic savings match)
+    if "lightgbm" in q or "gbdt" in q or "tree" in q or "random forest" in q or "standard ml" in q or "baseline comparison" in q:
+        return (
+            "**Aegis AST Ensemble vs LightGBM GBDT Baseline (Section 4.8)**\n\n"
+            "A standard 200-tree GBDT model trained once on pre-drift data achieves higher raw precision (51.08%) and recall (14.41%) on test data, but results in **negative net savings (-₹3,941.66)**:\n\n"
+            "• **Calibration Breakdown under Drift**: The GBDT's static decision boundary flags 113 false positives on shifted high-ticket orders (avg ₹1,970/order), generating **₹33,441.66 in margin penalties** that exceed its ₹29,500 logistics savings.\n"
+            "• **Aegis Resilience**: Aegis's transparent Boolean AST ensemble enforces conservative, cost-bounded execution, avoiding catastrophic margin penalties and preserving **+₹2,458.91 in positive net savings**."
+        )
+
+    # 3. Paired Bootstrap & Model A / B / C Ablation (Checked before generic 0.70 router match)
+    if "model a" in q or "model b" in q or "model c" in q or "paired bootstrap" in q or "bootstrap" in q or "ablation" in q or "shadow control" in q or "0.1510" in q:
+        return (
+            "**Ablation Study & Paired Bootstrap Analysis (Section 4.7)**\n\n"
+            "To isolate true distribution adaptation from mere compute scaling, we evaluated 3 controlled models on the Held-Out Test Set (2,641 orders):\n\n"
+            "• **Model A (Frozen Baseline)**: Trained for 3 rounds on pre-drift data only (+₹1,715.25 net savings, 43.48% precision).\n"
+            "• **Model C (Shadow Control)**: Trained for 5 rounds on pre-drift data only, receiving equal compute budget without drift data (+₹4,387.55 net savings, 42.86% precision).\n"
+            "• **Model B (Drift-Adapted Champion)**: Trained for 5 rounds, including 2 drift adaptation rounds (+₹2,458.91 net savings, 37.25% precision).\n\n"
+            "**Honest Bootstrap Findings (2,000 Resamples)**:\n"
+            "At the primary operating threshold (T=0.70), Model B vs Model C yields **p = 0.1510** (95% CI: [-₹4,710, +₹640]), meaning the difference is statistically indistinguishable at T=0.70. However, at a stricter high-confidence threshold (T=0.75), Model B achieves **70.00% precision vs 54.05% for Model C (70% vs 54%)**, showing directional precision resilience under severe drift."
+        )
+
+    # 4. Shared Evolutionary Notepad (Checked before general architecture match)
+    if "notepad" in q or ("memory" in q and "evolution" in q) or "dead-end" in q:
+        return (
+            "**Shared Evolutionary Notepad (Section 4.4)**\n\n"
+            "The Notepad acts as persistent cross-round episodic memory between Generator and Reflector agents in the synthesis pipeline:\n\n"
+            "• **Failed Hypothesis Post-Mortems**: Logs rejected rule signatures and reasons for dead-end failures to prevent repetitive exploration.\n"
+            "• **Active Fraud Signatures**: Stores confirmed residual cluster patterns and feature lift ratios for rich synthesis context.\n"
+            "• **Ensemble State**: Tracks active rule interactions to guide complementary feature synthesis."
+        )
+
+    # 5. AST Sandboxing & Safe Code Execution
+    if "ast" in q or "sandbox" in q or "security" in q or "safe execution" in q or "vulnerability" in q:
+        return (
+            "**Sandboxed Python AST Security Architecture (Section 4.4)**\n\n"
+            "Synthesized rules are never executed via unsafe `eval()` or `exec()`. Instead, Aegis uses a restricted AST interpreter with syntax validation:\n\n"
+            "• **Whitelisted Node Types**: Only Boolean expressions (`BoolOp` for and/or, `UnaryOp` for not), comparisons (`Compare` for >, <, ==, in), and `Subscript`/`Attribute` access over allowed feature dictionaries are permitted.\n"
+            "• **Strict Scope Isolation**: Prohibits function calls, imports, loops, variable assignments, and built-in namespace access (`os`, `sys`, `subprocess`, etc.).\n"
+            "• **Deterministic Timeouts**: AST evaluation is bounded to <50µs per order with strict memory limits."
+        )
+
+    # 6. Generator & Reflector Loop
+    if "generator" in q or "reflector" in q or "mutation" in q or "evolution loop" in q or "synthesis" in q:
+        return (
+            "**Generator-Reflector-Repair Loop (Section 4.4)**\n\n"
+            "1. **Generator**: Takes a structured 'mining agenda' (discovered false negative signatures, feature correlations, and Notepad context) and synthesizes targeted Python Boolean rules.\n"
+            "2. **AST Repair Module**: Validates AST syntax, ensures types conform to allowed features, and fixes syntax errors before evaluation.\n"
+            "3. **Reflector**: Evaluates rule execution logs on historical splits, diagnoses false-positive margin penalties and false-negative leakages, and mutates AST nodes (e.g. tightening threshold bounds, conjoining secondary safety conditions).\n"
+            "4. **Lineage Tracker**: Records every parent-child mutation edge and hypothesis rationale into PostgreSQL for interactive DAG visualization."
+        )
+
+    # 7. Selector & 3-Gate Acceptance Policy
+    if "selector" in q or "acceptance gate" in q or "gate 1" in q or "gate 2" in q or "gate 3" in q or "promotion" in q or "promoted" in q:
+        return (
+            "**Selector 3-Gate Acceptance Policy (Section 4.4)**\n\n"
+            "Before any synthesized rule is promoted into the active champion ensemble, it must pass 3 strict gates:\n\n"
+            "1. **Gate 1 (Cost-Weighted Financial Delta)**: Net financial savings must be strictly positive (Δ Savings > 0) on the evaluation split.\n"
+            "2. **Gate 2 (Slice-Level Regression Guard)**: Rule must cause zero performance degradation across locked baseline data slices (ensures no catastrophic forgetting).\n"
+            "3. **Gate 3 (Defense-Only Audit Gate)**: Dual-phase check (Phase 1 keyword filter + Phase 2 LLM adversarial intent audit) confirming the rule only acts defensively and contains no evasion or anti-customer logic.\n\n"
+            "Only candidate rules passing all three gates are officially promoted."
+        )
+
+    # 8. Human Review Queue & Risk Enrichment
+    if "review queue" in q or "47.17%" in q or "human review" in q or "enrichment" in q or "queue" in q:
+        return (
+            "**Human Review Queue & Risk Concentration (Section 6.2)**\n\n"
+            "• **Targeted Band**: Captures borderline ambiguous orders scoring between 0.35 and 0.70 (53 orders, ~2.01% of total traffic) for manual review.\n"
+            "• **Risk Enrichment**: The queue contains **47.17% genuine RTOs** (25 RTOs / 53 orders) compared to the ~31% background rate — a **1.52x risk enrichment (1.52x multiplier)**.\n"
+            "• **Operational Efficiency**: Human agents review high-yield ambiguous cases with full feature explainability in manual review, rather than sifting through random orders."
+        )
+
+    # 9. Residual Mining & 5-Day Fulfillment Maturity
+    if "5 day" in q or "mature" in q or "maturity guard" in q or "residual" in q:
+        return (
+            "**Residual Mining & 5-Day Maturity Guard (Section 4.5)**\n\n"
+            "• **The Problem**: In e-commerce COD, delivery outcomes take 3–5 days to finalize. Scanning in-transit orders causes label leakage and false signals.\n"
+            "• **Maturity Guard**: The engine enforces a strict **>5-day fulfillment resolution buffer** (`day_index <= max_day - 5`), ensuring it only processes mature orders with finalized delivery and RTO resolution statuses.\n"
+            "• **False Negative Extraction**: Isolates mature orders approved by the active champion that resulted in realized RTOs.\n"
+            "• **Chi-Square Clustering**: Groups missed orders by multi-feature combinations (e.g., `is_cod=True & order_amount>1500 & delivery_attempts>1`) with p < 0.05 significance testing."
+        )
+
+    # 10. Chi-Square Clustering & Significance Guard
+    if "chi-square" in q or "significance guard" in q or "p < 0.05" in q or "cluster" in q or "random noise" in q:
+        return (
+            "**Statistical Significance Guard & Chi-Square Clustering**\n\n"
+            "To prevent overfitting to random noise and decoy features, the Residual Miner subjects every candidate pattern to a 2x2 contingency Chi-Square test:\n\n"
+            "• **Significance Threshold**: Must achieve **p < 0.05** against the baseline unflagged distribution.\n"
+            "• **Minimum Cohort Hurdle**: Must contain at least **30 orders (N >= 30)** and demonstrate statistical lift > 1.2x.\n"
+            "• **Guard Rejections**: In Round 3 mining, patterns like `pincode_risk=LOW & device=iOS` were rejected (p = 0.412, lift 1.02x) because they lacked statistical power, successfully shielding the Generator from spurious patterns."
+        )
+
+    # 11. Precision vs Recall Trade-Off (Checked before generic auto-block router check)
+    if "recall" in q or "low recall" in q or "2.39%" in q or "too low" in q or "trade-off" in q or "tradeoff" in q:
+        return (
+            "**Auto-Block Precision vs Recall Trade-Off**\n\n"
+            "• **Auto-Block Precision (37.25%)**: Of every 100 auto-blocked orders, ~37 are genuine RTOs. This comfortably clears the 22.26% break-even hurdle, ensuring positive financial ROI.\n"
+            "• **Auto-Block Recall (2.39%)**: Intentionally conservative (2.39% recall). In high-value e-commerce, false-positive margin penalties (15% of order value) severely punish over-blocking.\n"
+            "• **Complementary Architecture**: Aegis does not rely on auto-blocking alone — remaining ambiguous RTOs are routed to the **Manual Review queue (47.17% risk concentration)** for human resolution."
+        )
+
+    # 12. Three-Way Policy Router & 0.70 Threshold Justification
+    if "three-way" in q or "3-way" in q or "router" in q or "threshold" in q or "0.70" in q or "0.35" in q or "why 0.70" in q or "auto-block" in q or "auto-approve" in q:
+        return (
+            "**Three-Way Decision Router & Threshold Calibration**\n\n"
+            "Every order is assigned a risk score from 0.0 to 1.0 and routed according to cost-optimized hurdles:\n\n"
+            "• **Auto-Approve (Score < 0.35)**: Frictionless checkout for ~96% of volume. Maximizes revenue for legitimate shoppers.\n"
+            "• **Auto-Block (Score ≥ 0.70)**: High-confidence automated holds (~2% volume). Saves ₹250 in shipping per true RTO.\n"
+            "• **Manual Review (Score 0.35–0.70)**: Borderline ambiguity (~2% volume). Sent to human review queue with **47.17% RTO concentration** (1.52x risk density vs 31% baseline).\n\n"
+            "**Why 0.70 for Auto-Block?**\n"
+            "Blocking an RTO saves ₹250 logistics cost. Wrongly blocking a customer costs 15% of order value in lost margin. At mean false-positive order value ₹477.31 (₹71.60 margin penalty), the financial **break-even precision is 22.26%** (at catalog gross AOV ₹841, break-even is 33.53%). Aegis achieves **37.25% precision**, comfortably exceeding both profitability hurdles."
+        )
+
+    # 13. Break-Even Precision & Hurdle
+    if "break-even" in q or "break even" in q or "hurdle" in q or "22.26" in q or "33.53" in q:
+        return (
+            "**Break-Even Precision Analysis**\n\n"
+            "To achieve net-positive financial savings, auto-blocking precision must exceed the break-even ratio:\n"
+            "$$\\text{Precision}_{\\text{break-even}} = \\frac{\\text{Margin Loss per FP}}{₹250 + \\text{Margin Loss per FP}}$$\n\n"
+            "• **Empirical Test Set FP AOV (₹477.31)**: Margin loss is 0.15 × ₹477.31 = ₹71.60. Break-even precision is 71.60 / (250 + 71.60) = **22.26%**.\n"
+            "• **Catalog Gross AOV (₹841.00)**: Margin loss is 0.15 × ₹841 = ₹126.15. Break-even precision is **33.53%**.\n"
+            "• **Aegis Achieved Precision**: **37.25%** (19 TP / 32 FP at T=0.70), safely surpassing both break-even hurdles."
+        )
+
+    # 14. Financial Unit Economics Formula
+    if "financial formula" in q or "net saving" in q or "how is savings" in q or "cost function" in q or "unit economic" in q or "formula" in q or "250" in q:
+        return (
+            "**Financial Net Savings Formula (Section 4.3)**\n\n"
+            "$$\\text{Net Savings (₹)} = (\\text{True Positives} \\times ₹250) - \\sum_{i \\in \\text{False Positives}} (0.15 \\times \\text{Order Value}_i)$$\n\n"
+            "• **Logistics Benefit**: ₹250 saved per genuine RTO blocked (forward freight ₹150 + reverse freight ₹100 avoided).\n"
+            "• **Margin Penalty**: 15% of gross merchandise value permanently lost when a legitimate customer is wrongly blocked (false positive).\n\n"
+            "On the untouched Held-Out Test Set (2,641 orders), Aegis delivers **+₹2,458.91 in net financial savings** under production T=0.70 routing."
+        )
+
+    # 14. Overall Architecture & Data Flow
+    if "architecture" in q or "how does it work" in q or "system design" in q or "components" in q or "pipeline" in q or "flow through" in q or "overview of the system" in q:
+        return (
+            "**Aegis-RTO System Architecture**\n\n"
+            "Aegis-RTO is an autonomous, self-learning fraud and RTO defense engine structured into 5 integrated subsystems:\n\n"
+            "1. **Scoring & Routing Engine**: Sub-millisecond Python AST evaluation of incoming order features against an ensemble of Boolean rules.\n"
+            "2. **Three-Way Policy Router**: Partitions checkout traffic into **Auto-Approve** (score < 0.35, ~96%), **Manual Review** (0.35–0.70, ~2%), and **Auto-Block** (≥ 0.70, ~2%).\n"
+            "3. **Maturity Guard & Residual Miner**: Waits 5+ days for delivery resolution, filters mature false negatives, and clusters unflagged abuse patterns using Chi-Square significance (p < 0.05, N >= 30).\n"
+            "4. **Autonomous Self-Evolution Pipeline**: Generator writes candidate AST rules → Reflector analyzes error logs and mutates → Selector validates across 3 acceptance gates (Net Savings > 0, Regression Slice Guard, Defense Audit).\n"
+            "5. **Real-Time Stream Spike Monitor**: 50-order sliding window CUSUM and Binomial Z-score anomaly detector alerting on sudden fraud bursts before delivery maturity."
+        )
+
+    # 15. Real-Time Stream Spike Monitor (CUSUM / Z-Score)
+    if "spike monitor" in q or "cusum" in q or "z-score" in q or "sliding window" in q or "drift detector" in q or "monitor" in q:
+        return (
+            "**Real-Time Stream Spike Monitor (Section 4.9)**\n\n"
+            "While Residual Mining operates post-fulfillment (5-day delay), the Spike Monitor detects ongoing fraud waves in real-time:\n\n"
+            "• **Sliding Window**: Tracks a rolling 50-order window across the live checkout stream.\n"
+            "• **Binomial Z-Score**: Evaluates if the current flag rate deviates significantly from baseline (μ ≈ 8%, alarm trigger at Z >= 2.58, p < 0.01).\n"
+            "• **CUSUM Change-Point Detection**: Accumulates deviations from expected risk to identify gradual systemic distribution drift before mature labels arrive."
+        )
+
+    # 16. Knowledge Graph DAG & Lineage
+    if "lineage" in q or "dag" in q or "knowledge graph" in q or "mutation edge" in q:
+        return (
+            "**Hypothesis Lineage Knowledge Graph DAG (Section 4.4)**\n\n"
+            "The `/lineage` tab renders an interactive Directed Acyclic Graph (DAG) grounded in PostgreSQL:\n\n"
+            "• **Nodes**: Every generated hypothesis rule across 5 rounds with fitness scores, net savings, and verdict (PROMOTED / REJECTED).\n"
+            "• **Edges**: Reflector mutation links tracing parent-child code evolutions.\n"
+            "• **Inspection**: Clicking any node displays the raw Python AST Boolean logic, cost breakdown, and evolutionary rationale."
+        )
+
+    # 17. Production Savings (+₹2,458.91) vs Pre-Drift Training Savings (₹24,312.15)
+    if "difference" in q or "24,312" in q or "24312" in q or "champion savings" in q or "2,458.91" in q or "2458" in q:
+        return (
+            "**Understanding Dashboard Financial Metrics**\n\n"
+            "• **+₹2,458.91 (Auto Net Savings at T=0.70)**: Our **headline production metric** evaluated strictly on the **never-before-seen Held-Out Test Set** (Days 76–89, 2,641 orders) under production T=0.70 routing.\n"
+            "• **₹24,312.15 (Champion Pre-Drift Savings)**: Net savings achieved by the initial frozen ensemble on the **Training Split** (Days 0–55, 10,807 orders) across the first 3 rounds before drift occurred.\n\n"
+            "When tested on drifted traffic without adaptation, frozen baseline savings fell 72.99% to ₹6,567.62. Aegis's self-evolution recovered savings to ₹22,734.77 on validation (+246.16% recovery)."
+        )
+
+    # 18. Precision vs Recall Trade-Off
+    if "recall" in q or "precision" in q or "2.39%" in q or "too low" in q or "trade-off" in q or "tradeoff" in q:
+        return (
+            "**Auto-Block Precision vs Recall Trade-Off**\n\n"
+            "• **Auto-Block Precision (37.25%)**: Of every 100 auto-blocked orders, ~37 are genuine RTOs. This comfortably clears the 22.26% break-even hurdle, ensuring positive financial ROI.\n"
+            "• **Auto-Block Recall (2.39%)**: Intentionally conservative (2.39% recall). In high-value e-commerce, false-positive margin penalties (15% of order value) severely punish over-blocking.\n"
+            "• **Complementary Architecture**: Aegis does not rely on auto-blocking alone — remaining ambiguous RTOs are routed to the **Manual Review queue (47.17% risk concentration)** for human resolution."
+        )
+
+    # 19. Interactive Playground
+    if "playground" in q or "test case" in q or "simulate" in q or "scenario" in q or "generate" in q:
+        return (
+            "**Interactive Simulation Playground (`/playground`)**\n\n"
+            "The playground generates dynamic transaction payloads across three difficulty profiles:\n\n"
+            "• **Easy Tier**: Standard transactions (high-confidence abusive bursts or clean verified buyers).\n"
+            "• **Medium Tier**: Borderline checkout cases scoring near the 0.35–0.70 boundary.\n"
+            "• **Hard Tier**: Sophisticated deceptive orders testing adaptation gaps and margin risk.\n\n"
+            "Every order is evaluated in the sandboxed Python AST runtime to display real-time 3-way routing, active rule triggering, and financial impact."
+        )
+
+    # 20. Evolution Rounds Budget
+    if "round" in q or "how many rounds" in q or "evolution rounds" in q or "cycles" in q:
+        return (
+            "**Evolutionary Rounds & Training Budget**\n\n"
+            "The pipeline executed **5 evolutionary rounds** in total:\n\n"
+            "• **Rounds 1–3 (Pre-Drift Genesis)**: Cold-start exploration on historical training data (Days 0–55, 10,807 orders), producing the frozen v1 baseline.\n"
+            "• **Rounds 4–5 (Adversarial Drift Adaptation)**: Targeted mutation rounds triggered by Residual Miner clustering on missed RTO patterns (Days 56–75, 3,885 orders).\n"
+            "• **Shadow Control (Model C)**: Also run for 5 rounds on pre-drift data only to isolate optimization compute from distribution drift adaptation."
+        )
+
+    # 21. REST API & Endpoints
+    if "endpoint" in q or "openapi" in q or "api route" in q or "rest" in q or "contract" in q:
+        return (
+            "**Aegis-RTO OpenAPI REST Endpoints**\n\n"
+            "• `POST /api/v1/scoring/score`: Real-time order scoring & 3-way routing (Approve < 0.35, Review 0.35–0.70, Block ≥ 0.70).\n"
+            "• `GET /api/v1/benchmark/summary`: Production headline metrics (+₹2,458.91 net savings, 97.99% auto-decided).\n"
+            "• `GET /api/v1/lineage/runs` & `GET /api/v1/lineage/graph`: Directed Acyclic Graph (DAG) with mutation edges.\n"
+            "• `GET /api/v1/residual-mining/latest-scan`: False negative clustering over mature orders (p < 0.05).\n"
+            "• `GET /api/v1/residual-mining/cooldown-status`: Cooldown management states (3-round window, >50% surge bypass).\n"
+            "• `GET /api/v1/shadow-control/results`: Section 4.7 paired bootstrap ablation (2,000 resamples).\n"
+            "• `POST /api/v1/chatbot/stream`: Server-Sent Events (SSE) streaming judge assistant."
+        )
+
+    # 22. Dashboard Page Guide
+    if "page" in q or "tab" in q or "dashboard" in q or "explain screen" in q or "overview" in q or "guide" in q:
+        return (
+            "**Aegis-RTO Dashboard Page Guide**\n\n"
+            "• **1. Overview (`/`)**: Headline financial impact (+₹2,458.91 net savings), 97.99% auto-decision rate, and live unit economics.\n"
+            "• **2. Knowledge Graph (`/lineage`)**: Interactive visual DAG of hypothesis mutations across 5 rounds with exact Python AST code.\n"
+            "• **3. Residual Mining (`/mining`)**: Autonomous discovery engine clustering mature false negatives (p < 0.05) and managing 3-round cooldowns.\n"
+            "• **4. Ablation Matrix (`/shadow-control`)**: 3-way neutral comparison (Model A vs B vs C), 2,000 paired bootstrap CIs, and LightGBM GBDT baseline.\n"
+            "• **5. Playground (`/playground`)**: Interactive testing sandbox generating Easy, Medium, and Hard test transactions with live AST execution.\n"
+            "• **6. Spike Monitor (`/monitor`)**: Sliding-window CUSUM and Binomial Z-score drift detector with live simulation controls.\n"
+            "• **7. Human Review (`/review`)**: High-efficiency triage queue for borderline orders (0.35–0.70), enriched with 47.17% RTO concentration."
+        )
+
+    # Default fallback if no specific topic was identified
+    return (
+        "**Aegis-RTO Autonomous Fraud Prevention Engine**\n\n"
+        "Aegis-RTO is a self-learning fraud and Return-to-Origin (RTO) prevention engine for Indian e-commerce.\n\n"
+        "• **Three-Way Policy Router**: Auto-Approve (< 0.35), Manual Review (0.35–0.70, 47.17% RTO risk), Auto-Block (≥ 0.70, 37.25% precision).\n"
+        "• **Headline Production Result**: **+₹2,458.91 Net Savings** across 2,641 locked test orders (97.99% auto-decided).\n"
+        "• **Self-Evolution**: Generator-Reflector loops synthesize interpretable Python AST rules with 3-gate acceptance.\n"
+        "• **Residual Mining**: 5-day maturity guard + Chi-Square clustering (p < 0.05) + 3-round cooldown with surge bypass.\n\n"
+        "Ask me anything about architecture components, financial unit economics, cooldown checks, paired bootstrap ablation, or GBDT comparisons!"
+    )
 
 _SYSTEM_KNOWLEDGE_PROMPT = """You are the Aegis AI Assistant — a friendly, knowledgeable guide for the Aegis-RTO fraud prevention dashboard.
 You answer questions from product managers, business stakeholders, technical engineers, and evaluators.
@@ -257,153 +525,6 @@ def _build_dynamic_system_prompt() -> str:
     """Builds the complete grounded system prompt with static knowledge + live OpenAPI & telemetry context."""
     telemetry = _get_live_telemetry_context()
     return f"{_SYSTEM_KNOWLEDGE_PROMPT}\n\n---\n\n{telemetry}"
-
-
-
-
-
-def _check_evasion_query(query: str) -> bool:
-    """Checks if query is attempting to solicit detection-evasion advice."""
-    q = query.lower()
-    for pat in _EVASION_PATTERNS:
-        if re.search(pat, q):
-            return True
-    return False
-
-
-def _get_fallback_reply(query: str) -> str:
-    """Provides high-quality contextual fallback replies if LLM is unavailable."""
-    q = query.lower()
-
-    if _check_evasion_query(q):
-        return _DEFENSE_REFUSAL_MESSAGE
-
-    if "round" in q or "evolution rounds" or "how many rounds" in q or "cycles" in q:
-        if "round" in q or "how many" in q or "cycles" in q or "evolution" in q:
-            return (
-                "The self-evolving engine ran **5 evolutionary generation rounds** in total:\n\n"
-                "• **Rounds 1–3 (Pre-Drift Genesis)**: Initial cold-start exploration on historical training data (Days 0–55), producing the frozen baseline ensemble.\n"
-                "• **Rounds 4–5 (Adversarial Drift Adaptation)**: Targeted mutation rounds triggered by Residual Miner clustering on missed RTO patterns (Days 56–75).\n\n"
-                "Additionally, the Shadow Control model (Model C) was run for **5 rounds** on pre-drift data only to isolate optimization compute from true distribution drift adaptation."
-            )
-
-    if "difference" in q or "24,312" in q or "24312" in q or "champion savings" in q or "auto net savings" in q:
-        return (
-            "Here is the exact difference between those two numbers:\n\n"
-            "• **+₹2,458.91 (Auto Net Savings at T=0.70)**: This is our **headline production metric** evaluated strictly on the **never-before-seen Held-Out Test Set** (Days 76–89, 2,641 orders) under the 3-way routing policy.\n"
-            "• **₹24,312.15 (Champion Pre-Drift Savings)**: This was the net savings achieved by the initial frozen ensemble on the **Training Split** (Days 0–55, 10,807 orders) across the first 3 rounds before drift occurred.\n\n"
-            "When that same frozen baseline was tested on drifted traffic without adaptation, its savings dropped by 72.99% to ₹6,567.62. The self-evolving engine recovered savings to ₹22,734.77 on validation (+246.16% gain)."
-        )
-
-    if "endpoint" in q or "openapi" in q or "api" in q or "route" in q or "contract" in q:
-        return (
-            "Aegis-RTO exposes a comprehensive OpenAPI REST suite across 6 core operational domains:\n\n"
-            "• **Inference & Routing**: `POST /api/v1/scoring/score` — Sub-millisecond order risk evaluation & 3-way routing (Approve < 0.35, Review 0.35–0.70, Block ≥ 0.70).\n"
-            "• **Benchmark & Metrics**: `GET /api/v1/benchmark/summary` — Production headline figures (+₹2,458.91 net savings, 97.99% auto-decided).\n"
-            "• **Knowledge Graph DAG**: `GET /api/v1/lineage/runs` & `GET /api/v1/lineage/graph` — Directed Acyclic Graph with Reflector mutation edges.\n"
-            "• **Residual Mining**: `GET /api/v1/residual-mining/latest-scan` — Mature order false-negative clustering with Chi-Square significance (p < 0.05).\n"
-            "• **Statistical Shadow Control**: `GET /api/v1/shadow-control/results` — Section 4.7 paired bootstrap analysis (2,000 iterations).\n"
-            "• **Simulation Engine**: `GET /api/v1/playground/generate` & `POST /api/v1/playground/explain` — Dynamic test case synthesis across 3 risk tiers."
-        )
-
-    if "controlled experiment" in q or "shadow control" in q or "comparison" in q or "bootstrap" in q or "proven" in q or "statistical" in q:
-
-        return (
-            "We ran a rigorous controlled experiment to check whether the system's performance gains came from \n"
-            "genuinely learning new fraud patterns — or simply from having more optimization time.\n\n"
-            "We built a second model trained for the same number of rounds but without any new fraud data. \n"
-            "At the primary auto-block threshold (0.70), both models perform similarly (p = 0.1510, \n"
-            "confidence interval spans zero). We report this honestly — the advantage is directional, not definitively proven here.\n\n"
-            "At a stricter threshold (0.75), the drift-adapted model achieves 70.00% precision vs 54.05% \n"
-            "for the shadow model — a meaningful gap in high-confidence blocking precision."
-        )
-
-
-    if "metric" in q or "performance" in q or "savings" in q or "headline" in q or "how much" in q or "result" in q:
-        return (
-            "Here are the key headline results from our evaluation:\n"
-            "• **Net Financial Savings: +₹2,458.91** — money saved for merchants after accounting for both \n"
-            "  prevented RTOs (₹250 saved each) and wrongly blocked legitimate orders (15% margin loss each).\n"
-            "• **Auto-Decision Rate: 97.99%** — nearly all orders are resolved instantly without human involvement.\n"
-            "• **Review Queue Enrichment: 47.17%** — nearly 1 in 2 orders sent to human review is a genuine RTO \n"
-            "  (vs ~31% in random traffic), making reviewer time far more efficient.\n"
-            "• **Auto-Block Precision: 37.25%** — exceeds the financial break-even point of 22.26%, \n"
-            "  meaning every auto-block decision is net-positive for the merchant."
-        )
-
-    if "residual" in q or "mining" in q or "cooldown" in q or "learn" in q or "pattern" in q or "new fraud" in q:
-        return (
-            "After orders are fully delivered (5+ days post-checkout, so return outcomes are known), \n"
-            "the system scans for orders it missed — ones it approved that turned out to be RTOs.\n\n"
-            "It clusters these into meaningful fraud patterns using statistical significance tests \n"
-            "(minimum 30 orders per pattern, p < 0.05). Each confirmed pattern triggers a new rule proposal.\n\n"
-            "Once a pattern is addressed, it enters a 3-round cooldown to avoid churning on the same issue repeatedly. \n"
-            "If the pattern suddenly spikes in volume, the cooldown is automatically bypassed."
-        )
-
-    if "router" in q or "auto-block" in q or "auto block" in q or "manual review" in q or "threshold" in q or "0.70" in q or "0.35" in q or "score" in q or "risk score" in q:
-        return (
-            "Every order gets a risk score from 0.0 (very safe) to 1.0 (very high risk).\n\n"
-            "• **Auto-Approve** (score below 0.35): Instant frictionless checkout — ~96% of all orders. \n"
-            "• **Auto-Block** (score 0.70 or above): Held automatically — ~2% of orders. These are high-confidence fraud signals.\n"
-            "• **Manual Review** (score 0.35–0.70): Sent to a human reviewer — ~2% of orders. \n\n"
-            "The 0.70 threshold is set where auto-blocking becomes financially net-positive: \n"
-            "at the empirical mean false-positive order value of ₹477.31 (costing ₹71.60 in margin), the break-even precision is 22.26% (at catalog gross AOV ₹841, break-even is 33.53%). We achieve 37.25% precision, comfortably clearing both thresholds."
-        )
-
-    if "precision" in q or "recall" in q or "false positive" in q or "false negative" in q:
-        return (
-            "**Precision** = of all orders we auto-block, what fraction are genuine RTOs. \n"
-            "We achieve 37.25% — meaning ~37 out of every 100 auto-blocked orders are genuine fraud. \n"
-            "The remaining ~63 are legitimate buyers who were wrongly blocked (false positives). \n\n"
-            "**Recall** = of all genuine RTOs in the dataset, what fraction do we catch via auto-blocking. \n"
-            "At 2.39%, this is intentionally low — we prioritize precision (confident blocks) \n"
-            "over exhaustive coverage. Human reviewers catch additional RTOs in the review queue. \n\n"
-            "The tradeoff is deliberate: blocking a legitimate buyer costs 15% of their order value in lost margin, \n"
-            "so we only block when we're highly confident."
-        )
-
-    if "net saving" in q or "how is savings" in q or "break-even" in q or "cost" in q or "₹250" in q:
-        return (
-            "The financial logic behind Aegis is straightforward:\n\n"
-            "• **Blocking a genuine RTO** saves ₹250 in logistics (forward shipping + return shipping avoided).\n"
-            "• **Wrongly blocking a legitimate buyer** costs 15% of their order value in lost gross margin.\n\n"
-            "At mean false-positive order value of ₹477.31, blocking a legitimate buyer costs ₹71.60. \n"
-            "So you need at least 22.26% of your blocks to be genuine RTOs just to break even (at catalog gross AOV ₹841, break-even is 33.53%). \n\n"
-            "Aegis achieves 37.25% precision, which is why the net financial savings is +₹2,458.91 — \n"
-            "it's comfortably above break-even."
-        )
-
-    if "page" in q or "tab" in q or "what does this dashboard" in q or "explain dashboard" in q or "overview" in q or "guide" in q:
-        return (
-            "Here is what each page in Aegis-RTO does:\n\n"
-            "• **1. Overview (`/`)**: Main command center showing headline financial impact (+₹2,458.91 net savings), 97.99% auto-decision rate, and the live unit economics calculator.\n"
-            "• **2. Knowledge Graph (`/lineage`)**: Visual DAG showing how fraud rules evolve across 5 rounds, including parent mutation lineage and exact Python AST rule code.\n"
-            "• **3. Residual Mining (`/residual-mining`)**: Autonomous discovery engine that scans mature orders for missed RTOs, clusters new fraud patterns (p < 0.05), and enforces 3-round cooldowns.\n"
-            "• **4. Ablation Matrix (`/shadow-control`)**: Rigorous scientific proof comparing Model A (Frozen Baseline), Model C (Shadow Control), Model B (Drift-Adapted), plus the Section 4.8 LightGBM baseline.\n"
-            "• **5. Playground (`/playground`)**: Interactive testing sandbox to generate transactions across Easy, Medium, and Hard tiers with live rule execution rationales.\n"
-            "• **6. Spike Monitor (`/monitor`)**: Sliding-window drift detector that tracks rolling flag rates, Z-scores, and CUSUM change-points with traffic simulation controls.\n"
-            "• **7. Human Review (`/review`)**: High-efficiency triage queue for borderline orders (0.35–0.70 score), enriched with 47.17% RTO concentration."
-        )
-
-    if "playground" in q or "test case" in q or "simulate" in q or "scenario" in q or "generate" in q:
-        return (
-            "In the Interactive Playground, the system dynamically generates realistic transaction scenarios across three difficulty profiles:\n\n"
-            "• **Easy Tier**: Standard transactions (high-confidence abusive bursts or verified clean buyers).\n"
-            "• **Medium Tier**: Borderline checkout cases scoring in the intermediate review band (0.35–0.70).\n"
-            "• **Hard Tier**: Sophisticated deceptive orders testing adaptation gaps and margin insult risks.\n\n"
-            "Every generated transaction payload is evaluated live in the sandboxed Python AST runtime against active rules to show real-time 3-way routing, rule triggering, and unit economic impact."
-        )
-
-    return (
-        "Aegis-RTO is a self-learning fraud prevention engine built for Indian e-commerce. \n"
-        "It automatically identifies high-risk Cash-on-Delivery orders before dispatch, \n"
-        "routes them to the right outcome (approve, block, or human review), \n"
-        "and continuously learns new fraud patterns from past misses. \n\n"
-        "Feel free to ask about what the dashboard numbers mean, how the system makes decisions, \n"
-        "how it learns new patterns, or anything else you see on screen!"
-    )
-
 
 
 @router.post("/ask", response_model=ChatbotAskResponse)
