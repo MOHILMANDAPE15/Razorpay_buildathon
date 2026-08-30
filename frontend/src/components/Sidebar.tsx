@@ -67,8 +67,8 @@ export function Sidebar() {
     <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col bg-white border-r border-slate-200 shadow-xs z-40">
       {/* Brand */}
       <Link href="/" className="flex items-center gap-3 px-4 py-4 border-b border-slate-100 group">
-        <div className="w-10 h-10 rounded-xl bg-slate-950 p-1 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition duration-200 shrink-0 border border-slate-800 flex items-center justify-center overflow-hidden">
-          <img src="/aegis-logo.png" alt="Aegis Logo" className="w-full h-full object-contain" />
+        <div className="w-10 h-10 rounded-xl bg-slate-950 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition duration-200 shrink-0 border border-slate-800 flex items-center justify-center overflow-hidden relative">
+          <img src="/aegis-logo.png" alt="Aegis Logo" className="w-full h-full object-cover scale-140 transform" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">

@@ -29,12 +29,10 @@ import {
 } from 'lucide-react';
 import { fetchBenchmarkSummary, BenchmarkSummaryResponse } from '@/lib/api';
 import ArchitectureDiagram from '@/components/ArchitectureDiagram';
-import { TrajectoryLineChart } from '@/components/charts/TrajectoryLineChart';
 
 export default function HomePage() {
   const [summary, setSummary] = useState<BenchmarkSummaryResponse | null>(null);
   const [activeStoryStep, setActiveStoryStep] = useState<number>(0);
-  const [lossPoolSplit, setLossPoolSplit] = useState<'test' | 'full'>('test');
 
   useEffect(() => {
     fetchBenchmarkSummary()
@@ -120,8 +118,10 @@ export default function HomePage() {
 
           {/* Aegis Shield Brand Badge */}
           <div className="hidden lg:flex flex-col items-center justify-center p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm shrink-0 w-44 hover:shadow-md transition">
-            <img src="/aegis-logo.png" alt="Aegis Shield Emblem" className="w-24 h-24 object-contain" />
-            <span className="text-[10px] font-black text-slate-900 font-mono tracking-widest mt-1">AEGIS-RTO</span>
+            <div className="w-24 h-24 flex items-center justify-center overflow-hidden rounded-xl bg-slate-950/5">
+              <img src="/aegis-logo.png" alt="Aegis Shield Emblem" className="w-full h-full object-cover scale-135 transform" />
+            </div>
+            <span className="text-[10px] font-black text-slate-900 font-mono tracking-widest mt-2">AEGIS-RTO</span>
             <span className="text-[8px] font-bold text-slate-500 font-mono tracking-wider">PROTECT · MONITOR · RESPOND</span>
           </div>
         </div>
@@ -387,142 +387,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Visual Drift Shock & Autonomous Recovery Trajectory Curve */}
-      <TrajectoryLineChart />
-
-      {/* 5. Interactive Macro Loss Pool & Unit Economics Visualizer */}
-      <div className="p-6 sm:p-8 rounded-3xl border border-slate-200 bg-white shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Macro Economics
-              </span>
-              <h2 className="text-lg font-bold text-slate-900">
-                The Preventable Loss Pool vs. Realized Savings
-              </h2>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Why aggressive 100% recall models go negative on net profit, and how Aegis captures verified financial value.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setLossPoolSplit('test')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                lossPoolSplit === 'test'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Held-Out Test Set (2,641 Orders)
-            </button>
-            <button
-              onClick={() => setLossPoolSplit('full')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                lossPoolSplit === 'full'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Entire Dataset (17,333 Orders)
-            </button>
-          </div>
-        </div>
-
-        {/* Dynamic Metric Cards based on Selected Split */}
-        {lossPoolSplit === 'test' ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
-              <span className="text-xs text-slate-500 font-mono font-bold uppercase tracking-wider">
-                1. Preventable Loss Pool
-              </span>
-              <div className="text-2xl font-black text-slate-900 font-mono">
-                ₹2,04,750.00
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Maximum theoretical ceiling from 819 genuine RTO orders (at ₹250 logistics cost / order).
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl border border-emerald-200 bg-emerald-50/40 space-y-2">
-              <span className="text-xs text-emerald-800 font-mono font-bold uppercase tracking-wider">
-                2. Automated Net Profit (T=0.70)
-              </span>
-              <div className="text-2xl font-black text-emerald-700 font-mono">
-                +₹2,458.91
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Captured across 51 auto-blocked orders (37.25% precision) after deducting all 15% margin false-positive costs.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/40 space-y-2">
-              <span className="text-xs text-indigo-800 font-mono font-bold uppercase tracking-wider">
-                3. Total Realized (Machine + Human)
-              </span>
-              <div className="text-2xl font-black text-indigo-700 font-mono">
-                ₹10,208.91
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Combines instant automated profit + ₹7,750 assisted recovery from 37 genuine RTOs in the human review queue (~5.0% capture).
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
-              <span className="text-xs text-slate-500 font-mono font-bold uppercase tracking-wider">
-                1. Preventable Loss Pool
-              </span>
-              <div className="text-2xl font-black text-slate-900 font-mono">
-                ₹11,28,750.00
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Maximum theoretical ceiling from 4,515 genuine RTO orders across all 90 days (at ₹250 / return). Total RTO GMV: ₹68.81 Lakhs.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl border border-emerald-200 bg-emerald-50/40 space-y-2">
-              <span className="text-xs text-emerald-800 font-mono font-bold uppercase tracking-wider">
-                2. Automated Net Profit (T=0.70)
-              </span>
-              <div className="text-2xl font-black text-emerald-700 font-mono">
-                +₹18,421.16
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Captured across 487 auto-blocks (31.42% precision) with 96.19% traffic resolved with zero human labor.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50/40 space-y-2">
-              <span className="text-xs text-indigo-800 font-mono font-bold uppercase tracking-wider">
-                3. Total Realized (Machine + Human)
-              </span>
-              <div className="text-2xl font-black text-indigo-700 font-mono">
-                ₹65,171.16
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Combines instant automated profit + ₹46,750 assisted recovery from 220 genuine RTOs routed to human review (5.77% capture).
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Why 100% Recall Causes Losses Explanatory Card */}
-        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-2">
-          <div className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
-            <AlertCircle className="w-4 h-4 text-amber-600" />
-            The 100% Recall Economic Trap in Indian E-Commerce:
-          </div>
-          <p className="leading-relaxed">
-            In COD fraud, blocking an RTO saves ₹250, but wrongly blocking a legitimate customer destroys 15% of their gross order value in lost profit margin (averaging ₹126 to ₹296 per order). Chasing 100% recall with an unconstrained model flags hundreds of borderline customers, causing false-positive margin penalties to wipe out logistics savings (resulting in negative net savings like LightGBM&#39;s -₹3,941.66 under drift). Aegis uses a conservative two-tier design: auto-blocking only high-confidence fraud (T &ge; 0.70) to guarantee profit, and routing borderline cases (0.35 to 0.70 score) to human review.
-          </p>
-        </div>
-      </div>
-
-      {/* 6. Subsystem Navigation Hub (6 Core Modules) */}
+      {/* 5. Subsystem Navigation Hub (6 Core Modules) */}
       <div className="space-y-4">
         <div>
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
