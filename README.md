@@ -28,162 +28,23 @@ Aegis-RTO is an **autonomous, closed-loop risk engine**. When fraud tactics shif
 
 ---
 
-## 🏛️ Closed-Loop Autonomous Architecture (Fully Expanded)
+## 🏛️ How Aegis-RTO Works (The 6-Step Closed Loop)
 
-> **Interactive version**: Run the dashboard locally (`npm run dev` in `frontend/`) and navigate to the **Architecture** tab for a zoomable, clickable version with plain-English breakdowns of every stage.
-
-```mermaid
-flowchart TD
-    %% ── STYLES ──────────────────────────────────────────────────────────────
-    classDef pipeline  fill:#eef2ff,stroke:#6366f1,stroke-width:2px,color:#1e1b4b,font-weight:bold
-    classDef ensemble  fill:#ecfdf5,stroke:#059669,stroke-width:2.5px,color:#064e3b,font-weight:bold
-    classDef routing   fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e,font-weight:bold
-    classDef outcome   fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a,font-weight:bold
-    classDef trigger   fill:#fffbeb,stroke:#d97706,stroke-width:2px,color:#78350f,font-weight:bold
-    classDef sentinel  fill:#ffffff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e,font-weight:bold
-    classDef sentDrift fill:#ffffff,stroke:#7c3aed,stroke-width:2px,color:#3b0764,font-weight:bold
-    classDef residual  fill:#fffbeb,stroke:#d97706,stroke-width:2.5px,color:#78350f,font-weight:bold
-    classDef substep   fill:#ffffff,stroke:#fbbf24,stroke-width:1.5px,color:#1c1917
-    classDef agent     fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#3b0764,font-weight:bold
-    classDef gate      fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:bold
-    classDef security  fill:#eef2ff,stroke:#4f46e5,stroke-width:2px,color:#1e1b4b,font-weight:bold
-    classDef promoted  fill:#065f46,stroke:#34d399,stroke-width:2.5px,color:#ecfdf5,font-weight:bold
-    classDef decision  fill:#fef9c3,stroke:#ca8a04,stroke-width:1.5px,color:#1c1917
-
-    %% ── NODE 1: NEW ORDER STREAM ─────────────────────────────────────────────
-    N1["⚡ **1. New Order Stream**
-    Live Checkout Transaction Telemetry
-    ━━━━━━━━━━━━━━━━━━━━
-    &lt;10ms Scoring SLA · 17 Extracted Order Signals"]:::pipeline
-
-    %% ── NODE 2: FROZEN SERVING ENSEMBLE ──────────────────────────────────────
-    N2["🛡️ **2. Frozen Serving Ensemble** · LOCKED PRODUCTION
-    Validated Python AST Rule Weights Snapshot
-    ━━━━━━━━━━━━━━━━━━━━
-    Zero Online LLM Dependency · Sub-millisecond Execution"]:::ensemble
-
-    %% ── NODE 3: 3-WAY DECISION ROUTER ───────────────────────────────────────
-    N3["**3. 3-Way Decision Router** · Zero Cherry-Picking
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    🟢 AUTO_APPROVE T&lt;0.35 · 🟡 MANUAL_REVIEW · 🔴 AUTO_BLOCK T≥0.70"]:::routing
-
-    %% ── NODE 4: OUTCOME LOGGED ───────────────────────────────────────────────
-    N4["🕐 **4. Outcome Logged & Maturation** · 5-DAY WINDOW
-    Physical Delivery vs RTO Courier Labels
-    ━━━━━━━━━━━━━━━━━━━━
-    Settlement Window · Verified Ground Truth Ingestion"]:::outcome
-
-    %% ── SECTION 5: TRIGGER LAYER ─────────────────────────────────────────────
-    subgraph TRIGGERS["5. 🔔 Autonomous Adaptation Trigger Layer — Continuous Sentinels"]
-        direction TB
-        T5A["📊 **Spike Monitor**
-        Sliding Binomial Z-Score
-        ━━━━━━━━━━━━━━
-        Z &gt; 2.50σ Anomaly Alert"]:::sentinel
-
-        T5B["〰️ **Drift Detector**
-        Population Stability Index (PSI)
-        ━━━━━━━━━━━━━━
-        PSI &gt; 0.25 Distribution Shift"]:::sentDrift
-
-        T5C["🔍 **Residual Miner**
-        False-Negative Cluster Isolation
-        ━━━━━━━━━━━━━━
-        Chi-Square p &lt; 0.01 Guard"]:::residual
-
-        R1["📦 1. Mature Orders 5d+  · Ground Truth"]:::substep
-        R2["🔵 2. Miss Clustering · HDBSCAN"]:::substep
-        R3["✅ 3. Fisher's Exact Test · p &lt; 0.01"]:::substep
-        R4["⏳ 4. Cooldown Check · 3 Rounds"]:::substep
-        R5["⭐ **5. Defense Agenda** · Targeted Brief"]:::residual
-
-        T5C --> R1 --> R2 --> R3 --> R4 --> R5
-    end
-
-    %% ── SECTION 6: MULTI-AGENT EVOLUTION LOOP ───────────────────────────────
-    subgraph AGENTS["6. 🤖 Core Multi-Agent Evolution Loop & Safety Verification Gates"]
-        direction TB
-        A1["🧠 **1. Generator Agent** · LLM SYNTHESIS
-        Synthesizes candidate Python AST boolean rules from agenda & reflections
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        Gemini / Claude · Guarded grammar · Zero eval()"]:::agent
-
-        A2["⚙️ **2. Evaluator Agent** · SANDBOX EXEC
-        Executes AST in memory sandbox; computes precision, recall, INR savings
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        Net Savings = TP×₹250 − FP×Margin Loss"]:::agent
-
-        A3["🔄 **3. Reflector Agent** · CAUSAL DIAGNOSIS
-        Diagnoses false positives & prescribes targeted rule boundary tightening
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        Self-Reflective Critique · Error Attribution"]:::agent
-
-        A4["⚖️ **4. Selector & Pruner** · PARETO FRONTIER
-        Greedy forward selection: prunes collinear rules and builds ensemble
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        Multi-Objective Optimization · Collinearity Guard"]:::agent
-
-        G1["✔️ **5. Gate 1: Pre-Drift Regression** · SAFETY GATE
-        Tests against historical training data Days 0–55. Enforces ≤5% regression
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        Zero-Tolerance Baseline Protection"]:::gate
-
-        G2["🗄️ **6. Gate 2: Held-Out Validation** · SAFETY GATE
-        Single-touch evaluation on physically isolated validation split Days 56–75
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        Prevents Data Snooping & Cherry-Picking"]:::gate
-
-        G3["🛡️ **7. Decoy Guard & AST Audit** · SECURITY AUDIT
-        Honeypot perturbation audit + zero circularity / decoy feature leakage
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        Zero Unauthorized Imports · Sandboxed Runtime"]:::security
-
-        A1 -->|"candidate AST"| A2
-        A2 -->|"valid AST"| A3
-        A3 -->|"diagnosed candidate"| A4
-        A4 -->|"pareto ensemble candidate"| G1
-        G1 -->|"regression &lt; 5% ✅ PASS"| G2
-        G2 -->|"validation split ✅ PASS"| G3
-        G3 -->|"all gates verified ✅ PASS"| N7
-
-        %% ── Retry Loops ─────────────────────────────────────────────────────
-        A2 -->|"✕ syntax error / fast fail"| A1
-        G1 -->|"✕ regression &gt; 5% — prune & re-mutate"| A1
-    end
-
-    %% ── NODE 7: PROMOTED CHAMPION ────────────────────────────────────────────
-    N7["✨ **8. Promoted Champion Rule** · PROMOTED LIVE
-    Promoted to Production Registry · Serving Weights Updated
-    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    Shadow Deployment → Canary Testing → Live Serving Snapshot Node 2"]:::promoted
-
-    %% ── MAIN FORWARD PIPELINE ────────────────────────────────────────────────
-    N1 -->|"stream"| N2
-    N2 -->|"score &lt;10ms"| N3
-    N3 -->|"log actions"| N4
-    N4 -->|"mature courier ground truth"| TRIGGERS
-
-    %% ── TRIGGER → AGENT FEEDS ────────────────────────────────────────────────
-    T5A -->|"spike agenda"| A1
-    T5B -->|"drift agenda"| A1
-    R5  -->|"feeds agenda into Generator"| A1
-
-    %% ── MAIN PROMOTION RETURN LOOP ───────────────────────────────────────────
-    N7 -->|"↻ if promoted — atomic snapshot update"| N2
 ```
-
-### The 8-Stage Lifecycle
-
-| Stage | Name | Role |
-|:---:|---|---|
-| **1** | New Order Stream | Live checkout telemetry evaluated in &lt;10ms |
-| **2** | Frozen Serving Ensemble | Locked Python AST rule snapshot — zero LLM at inference |
-| **3** | 3-Way Decision Router | Auto-Approve / Manual Review / Auto-Block by threshold |
-| **4** | Outcome Logged & Maturation | 5-day delivery truth window before labelling |
-| **5** | Autonomous Trigger Layer | Spike Monitor + Drift Detector + Residual Miner sentinels |
-| **6** | Multi-Agent Evolution Loop | Generator → Evaluator → Reflector → Selector/Pruner |
-| **7** | Safety Verification Gates | Gate 1 (Regression) → Gate 2 (Held-Out) → Decoy Guard |
-| **8** | Promoted Champion | Atomic snapshot update back into Node 2 — zero downtime |
+   ┌─────────────┐       stream       ┌──────────────────┐       score        ┌──────────────────┐
+   │ 1. New      │ ─────────────────> │ 2. Frozen Serving│ ─────────────────> │ 3. 3-Way         │
+   │    Order    │                    │    Ensemble      │                    │    Router        │
+   └─────────────┘                    └──────────────────┘                    └────────┬─────────┘
+                                                ▲                                      │
+                                                │ (if promoted: atomic snapshot update)│ action
+                                                │                                      ▼
+   ┌─────────────┐       agenda       ┌─────────┴────────┐      mature        ┌──────────────────┐
+   │ 6. Multi-   │ <───────────────── │ 5. Autonomous    │ <───────────────── │ 4. Outcomes      │
+   │    Agent    │                    │    Triggers      │                    │    Logged        │
+   │    Evolution│                    │ (Spike/Drift/    │                    │ (5-Day Maturation│
+   │    Loop     │                    │  Residual Miner) │                    │  Ground Truth)   │
+   └─────────────┘                    └──────────────────┘                    └──────────────────┘
+```
 
 1. **1. New Order Stream**: Live checkouts are evaluated in sub-10ms against the serving rule snapshot.
 2. **2. Frozen Serving Ensemble**: Rules execute inside a secure, sandboxed Abstract Syntax Tree (AST) evaluator without `eval()`, `exec()`, or file access.
