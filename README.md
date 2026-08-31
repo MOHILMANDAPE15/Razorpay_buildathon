@@ -28,23 +28,168 @@ Aegis-RTO is an **autonomous, closed-loop risk engine**. When fraud tactics shif
 
 ---
 
-## 🏛️ How Aegis-RTO Works (The 6-Step Closed Loop)
+## 🏛️ Closed-Loop Autonomous Architecture — Fully Expanded
 
+> 💡 **Interactive version**: Run the dashboard locally and open the **Overview** tab for a zoomable, animated, click-to-expand version of this diagram with plain-English breakdowns of every stage.
+
+```mermaid
+flowchart TD
+    %% ── NODE STYLES ─────────────────────────────────────────────────────────
+    classDef pipeline  fill:#eef2ff,stroke:#6366f1,stroke-width:2px,color:#1e1b4b,font-weight:bold
+    classDef ensemble  fill:#ecfdf5,stroke:#059669,stroke-width:2.5px,color:#064e3b,font-weight:bold
+    classDef routing   fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e,font-weight:bold
+    classDef outcome   fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a,font-weight:bold
+    classDef sentinel  fill:#ffffff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e,font-weight:bold
+    classDef sentDrift fill:#ffffff,stroke:#7c3aed,stroke-width:2px,color:#3b0764,font-weight:bold
+    classDef residual  fill:#fffbeb,stroke:#d97706,stroke-width:2.5px,color:#78350f,font-weight:bold
+    classDef substep   fill:#ffffff,stroke:#fbbf24,stroke-width:1.5px,color:#1c1917
+    classDef agenda    fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f,font-weight:bold
+    classDef agent     fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#3b0764,font-weight:bold
+    classDef gate      fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#064e3b,font-weight:bold
+    classDef security  fill:#eef2ff,stroke:#4f46e5,stroke-width:2px,color:#1e1b4b,font-weight:bold
+    classDef promoted  fill:#065f46,stroke:#34d399,stroke-width:2.5px,color:#ecfdf5,font-weight:bold
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% NODE 1 — NEW ORDER STREAM
+    %% ═══════════════════════════════════════════════════════════════
+    N1["⚡ 1. NEW ORDER STREAM · CLICK DETAILS
+    Live Checkout Transaction Telemetry
+    ‹10ms Scoring SLA · 17 Extracted Order Signals"]:::pipeline
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% NODE 2 — FROZEN SERVING ENSEMBLE
+    %% ═══════════════════════════════════════════════════════════════
+    N2["🛡️ 2. FROZEN SERVING ENSEMBLE · LOCKED PRODUCTION
+    Validated Python AST Rule Weights Snapshot
+    Zero Online LLM Dependency · Sub-millisecond Execution"]:::ensemble
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% NODE 3 — 3-WAY DECISION ROUTER
+    %% ═══════════════════════════════════════════════════════════════
+    N3["3. 3-WAY DECISION ROUTER · Zero Cherry-Picking
+    ──────────────────────────────────────────
+    🟢 AUTO_APPROVE T&lt;0.35 │ 🟡 MANUAL_REVIEW │ 🔴 AUTO_BLOCK T≥0.70"]:::routing
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% NODE 4 — OUTCOME LOGGED & MATURATION
+    %% ═══════════════════════════════════════════════════════════════
+    N4["🕐 4. OUTCOME LOGGED & MATURATION · 5-DAY WINDOW
+    Physical Delivery vs RTO Courier Labels
+    Settlement Window · Verified Ground Truth Ingestion"]:::outcome
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% SECTION 5 — AUTONOMOUS TRIGGER LAYER
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph TRIGGERS["5. 🔔 AUTONOMOUS ADAPTATION TRIGGER LAYER — CONTINUOUS SENTINELS"]
+        direction TB
+
+        T5A["📊 SPIKE MONITOR
+        Sliding Binomial Z-Score
+        Z &gt; 2.50σ Anomaly Alert"]:::sentinel
+
+        T5B["〰️ DRIFT DETECTOR
+        Population Stability Index PSI
+        PSI &gt; 0.25 Distribution Shift"]:::sentDrift
+
+        T5C["🔍 RESIDUAL MINER
+        False-Negative Cluster Isolation
+        Chi-Square p &lt; 0.01 Guard"]:::residual
+
+        R1["📦 1. Mature Orders 5d+ · Ground Truth"]:::substep
+        R2["🔵 2. Miss Clustering · HDBSCAN"]:::substep
+        R3["✅ 3. Fisher's Exact Test · p &lt; 0.01"]:::substep
+        R4["⏳ 4. Cooldown Check · 3 Rounds"]:::substep
+        R5["⭐ 5. DEFENSE AGENDA · Targeted Brief"]:::agenda
+
+        T5C --> R1 --> R2 --> R3 --> R4 --> R5
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% SECTION 6 — MULTI-AGENT EVOLUTION LOOP & GATES
+    %% ═══════════════════════════════════════════════════════════════
+    subgraph AGENTS["6. 🤖 CORE MULTI-AGENT EVOLUTION LOOP & SAFETY VERIFICATION GATES"]
+        direction TB
+
+        A1["🧠 1. GENERATOR AGENT · LLM SYNTHESIS
+        Synthesizes candidate Python AST boolean rules from agenda & reflections
+        Gemini / Claude · Guarded grammar · Zero eval()"]:::agent
+
+        A2["⚙️ 2. EVALUATOR AGENT · SANDBOX EXEC
+        Executes AST in memory sandbox; computes precision, recall, INR savings
+        Net Savings = TP × ₹250 − FP × Margin Loss"]:::agent
+
+        A3["🔄 3. REFLECTOR AGENT · CAUSAL DIAGNOSIS
+        Diagnoses false positives & prescribes targeted rule boundary tightening
+        Self-Reflective Critique · Error Attribution"]:::agent
+
+        A4["⚖️ 4. SELECTOR & PRUNER · PARETO FRONTIER
+        Greedy forward selection: prunes collinear rules and builds ensemble
+        Multi-Objective Optimization · Collinearity Guard"]:::agent
+
+        G1["✔️ 5. GATE 1: PRE-DRIFT REGRESSION · SAFETY GATE
+        Tests against historical training data Days 0–55 · Enforces ≤5% regression
+        Zero-Tolerance Baseline Protection"]:::gate
+
+        G2["🗄️ 6. GATE 2: HELD-OUT VALIDATION · SAFETY GATE
+        Single-touch evaluation on physically isolated validation split Days 56–75
+        Prevents Data Snooping & Cherry-Picking"]:::gate
+
+        G3["🛡️ 7. DECOY GUARD & AST AUDIT · SECURITY AUDIT
+        Honeypot perturbation audit + zero circularity / decoy feature leakage
+        Zero Unauthorized Imports · Sandboxed Runtime"]:::security
+
+        A1 -->|"candidate AST"| A2
+        A2 -->|"valid AST"| A3
+        A3 -->|"diagnosed candidate"| A4
+        A4 -->|"pareto ensemble candidate"| G1
+        G1 -->|"regression &lt; 5% ✅ PASS"| G2
+        G2 -->|"validation split ✅ PASS"| G3
+        G3 -->|"all gates verified ✅ PASS"| N7
+
+        %% ── RETRY LOOPS (left-side feedback) ──────────────────────
+        A2 -->|"✕ if syntax error / fast fail"| A1
+        G1 -->|"✕ if regression &gt; 5% — prune & re-mutate"| A1
+    end
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% NODE 7 — PROMOTED CHAMPION RULE
+    %% ═══════════════════════════════════════════════════════════════
+    N7["✨ 8. PROMOTED CHAMPION RULE · PROMOTED LIVE
+    Promoted to Production Registry · Serving Weights Updated
+    Shadow Deployment → Canary Testing → Live Serving Snapshot Node 2"]:::promoted
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% MAIN FORWARD PIPELINE EDGES
+    %% ═══════════════════════════════════════════════════════════════
+    N1 -->|"stream"| N2
+    N2 -->|"score &lt;10ms"| N3
+    N3 -->|"log actions"| N4
+    N4 -->|"mature courier ground truth"| TRIGGERS
+
+    %% ── TRIGGER → AGENT FEEDS ────────────────────────────────────
+    T5A -->|"spike agenda"| A1
+    T5B -->|"drift agenda"| A1
+    R5  -->|"feeds agenda into Generator ▾"| A1
+
+    %% ═══════════════════════════════════════════════════════════════
+    %% MAIN CLOSING PROMOTION LOOP
+    %% ↻ Promoted Champion → atomically updates Frozen Ensemble (Node 2)
+    %% ═══════════════════════════════════════════════════════════════
+    N7 -->|"↻ if promoted — atomic snapshot update to Node 2"| N2
 ```
-   ┌─────────────┐       stream       ┌──────────────────┐       score        ┌──────────────────┐
-   │ 1. New      │ ─────────────────> │ 2. Frozen Serving│ ─────────────────> │ 3. 3-Way         │
-   │    Order    │                    │    Ensemble      │                    │    Router        │
-   └─────────────┘                    └──────────────────┘                    └────────┬─────────┘
-                                                ▲                                      │
-                                                │ (if promoted: atomic snapshot update)│ action
-                                                │                                      ▼
-   ┌─────────────┐       agenda       ┌─────────┴────────┐      mature        ┌──────────────────┐
-   │ 6. Multi-   │ <───────────────── │ 5. Autonomous    │ <───────────────── │ 4. Outcomes      │
-   │    Agent    │                    │    Triggers      │                    │    Logged        │
-   │    Evolution│                    │ (Spike/Drift/    │                    │ (5-Day Maturation│
-   │    Loop     │                    │  Residual Miner) │                    │  Ground Truth)   │
-   └─────────────┘                    └──────────────────┘                    └──────────────────┘
-```
+
+### Stage-by-Stage Reference
+
+| # | Stage | Badge | What It Does |
+|:---:|---|---|---|
+| **1** | New Order Stream | `PIPELINE` | Live checkout telemetry scored in &lt;10ms against serving snapshot |
+| **2** | Frozen Serving Ensemble | `LOCKED PRODUCTION` | Immutable Python AST rule weights — zero LLM dependency at inference |
+| **3** | 3-Way Decision Router | `ZERO CHERRY-PICKING` | Routes every order: Auto-Approve / Manual Review / Auto-Block |
+| **4** | Outcome Logged & Maturation | `5-DAY WINDOW` | Waits for physical courier truth before labelling decisions |
+| **5** | Autonomous Trigger Layer | `CONTINUOUS SENTINELS` | Spike Monitor + Drift Detector + Residual Miner fire agendas |
+| **6** | Multi-Agent Evolution Loop | `LLM SYNTHESIS` | Generator → Evaluator → Reflector → Selector/Pruner |
+| **7** | Safety Verification Gates | `SAFETY GATE` | Gate 1 Regression → Gate 2 Held-Out → Decoy Guard AST Audit |
+| **8** | Promoted Champion Rule | `PROMOTED LIVE` | Atomic snapshot update back into Node 2 — zero downtime |
 
 1. **1. New Order Stream**: Live checkouts are evaluated in sub-10ms against the serving rule snapshot.
 2. **2. Frozen Serving Ensemble**: Rules execute inside a secure, sandboxed Abstract Syntax Tree (AST) evaluator without `eval()`, `exec()`, or file access.
