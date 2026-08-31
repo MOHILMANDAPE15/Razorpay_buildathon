@@ -48,106 +48,89 @@ Aegis-RTO is an **autonomous, closed-loop risk engine**. When fraud tactics shif
 
 ---
 
+
 ## 🚀 How It All Works — A Plain-English Walkthrough
 
-> **Follow a single order from checkout to decision — and see how the system learns and improves itself over time.**
-
-### Step 1 — A Customer Places a COD Order
-
-Imagine Rahul in Pune places a Cash-on-Delivery order for a ₹1,200 smartwatch at 2 AM using a new phone number, a freshly created account, and a pincode that has historically seen many returns.
-
-The moment he hits **Place Order**, Aegis-RTO kicks in.
+> **Follow a single order through every module — and see how the system autonomously learns and rewrites its own defense rules.**
 
 ---
 
-### Step 2 — The Frozen Serving Ensemble Scores It Instantly
+### Step 1 — A Customer Places a COD Order
 
-Aegis reads 17 signals from that order — things like the hour of day, whether the account is new, the pincode's historical return rate, the device type, and the order value.
+A customer places a Cash-on-Delivery order for a ₹1,200 smartwatch at 2 AM — new phone number, freshly created account, high-RTO pincode. The moment the order is submitted, Aegis-RTO kicks in.
 
-It then runs those signals through a locked set of **Python rules** that were validated before deployment. These rules are frozen — they don't call any AI model at runtime. The whole scoring happens in **under 10 milliseconds**.
+---
 
-Think of it like a trained security guard at the door who already knows the checklist by heart and doesn't need to call anyone for guidance.
+### Step 2 — The Frozen Serving Ensemble Scores It in Real Time
+
+Aegis extracts **17 order signals** — account age, order hour, pincode RTO rate, device type, item value, and more — and runs them through a **locked set of Python AST rules** that are already deployed in production. No live AI model is called at this point. The entire scoring completes in **under 10 milliseconds**.
+
+The ruleset is called "frozen" because it is an immutable snapshot. It only gets updated when a new champion rule successfully passes all safety gates (Step 7). This separation keeps inference fast and predictable.
 
 ---
 
 ### Step 3 — The 3-Way Router Makes a Decision
 
-Based on the score, one of three things happens:
+Every order gets routed to exactly one of three buckets:
 
-| Score | Action | What it means |
+| Bucket | Action | What it means |
 |---|---|---|
-| Low risk | ✅ **Auto-Approve** | Order goes straight to fulfillment — no friction for the customer |
-| High risk | 🚫 **Auto-Block** | High-confidence fraud, order is blocked automatically |
-| Uncertain | 🟡 **Manual Review** | Sent to a human analyst for a quick judgment call |
+| Low risk | ✅ **Auto-Approve** | Order goes straight to fulfillment — no customer friction |
+| High risk | 🚫 **Auto-Block** | High-confidence fraud caught by the serving ensemble |
+| Uncertain | 🟡 **Manual Review** | Queued for a human analyst — fraud density here is 1.52x concentrated |
 
-In Rahul's case — 2 AM, new account, risky pincode — the system scores him medium-high and sends him to **Manual Review**.
+The 2 AM new-account order above lands in Manual Review.
 
 ---
 
 ### Step 4 — The Outcome Is Logged and Waits to Mature
 
-Whatever decision was made gets logged. But Aegis does not immediately use that decision as training data.
-
-Why? Because the courier still needs to physically deliver (or return) the package. Aegis waits **5 days** for the real outcome — was the order delivered or returned? — before using it as ground truth.
-
-This prevents the system from learning from incomplete or misleading information.
+The decision is written to the database immediately. But Aegis does not use it as training signal yet — it waits a **5-day maturation window** for the courier to physically deliver or return the parcel. Only verified ground truth (actual RTO or delivery confirmation) enters the learning pipeline. This prevents the system from training on in-flight, unresolved orders.
 
 ---
 
-### Step 5 — The Sentinels Watch for Changes in Fraud Patterns
+### Step 5 — Three Sentinels Watch for Emerging Fraud Patterns
 
-While all of this is happening in real time, three background watchers are always running:
+Three background monitors run continuously against the maturing outcome stream:
 
-**📊 Spike Monitor** — If 50 orders suddenly pour in from the same pincode within one hour (far above normal), this raises an alert. It catches coordinated fraud surges early, even before any orders are actually returned.
+**📊 Spike Monitor** — Uses a sliding **binomial Z-score** to detect sudden, statistically abnormal surges in RTO rate at a pincode or account cohort level. It fires before any matured labels are even needed, catching coordinated fraud waves in near real time.
 
-**〰️ Drift Detector** — If the typical order values or geographic spread of orders starts shifting compared to last month, this fires. It means the nature of the incoming orders is changing — possibly because fraudsters have moved to a new city or tactic.
+**〰️ Drift Detector** — Monitors the **Population Stability Index (PSI)** of incoming order features (value distribution, pincode spread, device mix). A significant PSI shift means the population of orders has changed — often because fraudsters have shifted tactics or geography — and the existing rules may no longer be aligned.
 
-**🔍 Residual Miner** — After 5 days, this scans all orders that slipped through (the system approved them but they turned out to be fraudulent returns). It groups them by shared characteristics and looks for a pattern. For example: *"All the missed frauds came from Tier-3 cities, placed between midnight and 3 AM, with order values above ₹900."*
-
-When any sentinel spots a real, statistically significant pattern, it writes a **Defense Agenda** — a plain brief describing the fraud behaviour — and passes it to the evolution engine.
+**🔍 Residual Miner** — After maturation, it scans all false negatives (orders the system approved that turned out to be fraudulent returns) and runs **HDBSCAN clustering** on their feature vectors. HDBSCAN groups similar missed-fraud orders into dense clusters without requiring a fixed number of groups — so it naturally finds pockets of similar fraud behaviour. Each cluster that passes a **Fisher's Exact Test significance check** and a **3-round cooldown guard** (to avoid proposing the same fix repeatedly) generates a **Defense Agenda** — a structured brief that describes the shared feature profile of the cluster — which is handed to the evolution engine.
 
 ---
 
-### Step 6 — The Multi-Agent Loop Writes and Verifies a New Rule
+### Step 6 — The Multi-Agent Loop Writes, Evaluates, Reflects, and Prunes a New Rule
 
-This is where Aegis teaches itself. Four AI agents work in sequence:
+Four AI agents work in sequence:
 
-**🧠 Generator** reads the Defense Agenda and writes a new Python rule. For example:
+**🧠 Generator** reads the Defense Agenda and synthesises a new candidate **Python AST boolean rule** — a transparent, human-readable condition like `order.hour >= 23 and order.account_age_days < 7 and order.pincode_rto_rate > 0.30`. The rule is expressed as an Abstract Syntax Tree so it can be statically validated before execution — no `eval()`, no arbitrary code.
 
-```python
-# Block late-night high-value orders from brand-new accounts in high-RTO pincodes
-order.hour >= 23 and order.account_age_days < 7 and order.pincode_rto_rate > 0.30 and order.item_value > 900
-```
+**⚙️ Evaluator** executes the rule in an **isolated sandbox** (no database writes, no network calls, CPU time-limited) against the full historical dataset and computes: how many actual frauds does this catch, how many genuine orders does it wrongly flag, and what is the net INR savings after accounting for the cost of false positives?
 
-**⚙️ Evaluator** runs that rule safely in a sandboxed environment against historical orders and measures: how many real frauds does it catch vs. how many genuine customers does it wrongly block?
+**🔄 Reflector** reviews the Evaluator's output and performs **causal diagnosis** — if the rule has too many false positives, it identifies which feature boundary is responsible and feeds targeted correction instructions back to the Generator for the next iteration.
 
-**🔄 Reflector** reviews those results. If the rule is catching fraud well but also blocking too many legitimate orders, it diagnoses why and tells the Generator to tighten the rule — for example, raise the value threshold from ₹900 to ₹1,100.
-
-**⚖️ Selector** checks whether this new rule actually adds new value or just overlaps with something the system already catches.
+**⚖️ Selector & Pruner** applies **greedy forward selection** to decide whether the new rule earns a place in the ensemble. It checks for **collinearity** — if the new rule fires on almost the same orders as an existing rule, it adds no marginal value and is pruned. Only rules that improve the **Pareto frontier** of precision vs. recall vs. net savings get added to the candidate ensemble.
 
 ---
 
 ### Step 7 — Three Safety Gates Before Anything Goes Live
 
-Even if the new rule looks excellent in the lab, it must pass three independent checks before it can be deployed:
+**Gate 1 — Pre-Drift Regression:** The candidate ensemble is tested on the original 55-day training split. If overall performance regresses by more than 5% compared to the baseline, the rule is rejected and sent back for revision.
 
-**Gate 1 — Regression Check:** The new rule is tested on 55 days of historical data. If it makes the overall system worse by more than 5%, it is rejected and sent back for revision. This protects existing performance.
+**Gate 2 — Held-Out Validation:** The ensemble is evaluated exactly once on a physically isolated held-out split (Days 56–75) that was never touched during training or rule development. This single-touch constraint prevents data snooping and cherry-picking.
 
-**Gate 2 — Held-Out Validation:** The rule is run once — and only once — on a completely separate set of orders that were locked away from the very beginning. This is the final exam with no second chances. It proves the rule works on orders it has never seen.
-
-**Gate 3 — Decoy Guard:** The rule is checked to make sure it is not accidentally using information that would only be available after the outcome (circular reasoning) or any fake test signals planted to catch cheating.
+**Gate 3 — Decoy Guard & AST Audit:** The rule's AST is scanned for references to any decoy or circular features (signals that are only knowable after the outcome), and a honeypot perturbation test is applied. Any rule that reacts to planted nonsense signals is rejected immediately.
 
 ---
 
-### Step 8 — The Champion Rule Goes Live. Instantly. No Downtime.
+### Step 8 — The Champion Rule Goes Live. Zero Downtime.
 
-If the rule passes all three gates, it is promoted. The Frozen Serving Ensemble (Step 2) is updated atomically — like swapping one file for another — with the new rule now included.
+If all three gates pass, the new rule is promoted. The Frozen Serving Ensemble is updated **atomically** — the serving snapshot is swapped in a single operation with no server restart and no redeployment. The next incoming order is instantly scored against the improved ruleset.
 
-The very next order that arrives is scored using the improved ruleset. No server restart. No redeployment. No data scientist needed.
+The fraud pattern from Step 1 is now encoded. Anyone attempting the same behaviour is caught automatically.
 
-Rahul's fraud pattern has been captured. Anyone who tries the same trick next time gets blocked automatically.
-
----
 
 ## 💰 The Financial ROI Equation
 
