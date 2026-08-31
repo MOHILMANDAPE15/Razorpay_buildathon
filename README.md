@@ -1,4 +1,4 @@
-﻿# 🛡️ Aegis-RTO: Autonomous Self-Evolving Fraud Defense Engine
+# 🛡️ Aegis-RTO: Autonomous Self-Evolving Fraud Defense Engine
 
 > **Razorpay AI Buildathon 2026 — Track 2: AI Risk Manager (Return-Risk Scorer & Adaptive Defense)**
 > 
@@ -97,7 +97,7 @@ Three background monitors run continuously against the maturing outcome stream:
 
 **〰️ Drift Detector** — Monitors the **Population Stability Index (PSI)** of incoming order features (value distribution, pincode spread, device mix). A significant PSI shift means the population of orders has changed — often because fraudsters have shifted tactics or geography — and the existing rules may no longer be aligned.
 
-**🔍 Residual Miner** — After maturation, it scans all false negatives (orders the system approved that turned out to be fraudulent returns) and runs **HDBSCAN clustering** on their feature vectors. HDBSCAN groups similar missed-fraud orders into dense clusters without requiring a fixed number of groups — so it naturally finds pockets of similar fraud behaviour. Each cluster that passes a **Fisher's Exact Test significance check** and a **3-round cooldown guard** (to avoid proposing the same fix repeatedly) generates a **Defense Agenda** — a structured brief that describes the shared feature profile of the cluster — which is handed to the evolution engine.
+**🔍 Residual Miner** — After maturation, it scans all false negatives (orders the system approved that turned out to be fraudulent returns) and performs **statistical subgroup discovery** across behavioral feature dimensions. It isolates dense cohorts of unflagged fraud patterns without multiple-testing noise. Each cluster that passes a **Chi-Square significance test ($p < 0.05$)** and a **3-round cooldown guard** (to avoid proposing the same fix repeatedly) generates a **Defense Agenda** — a structured brief describing the shared feature profile of the cluster — which is handed to the evolution engine.
 
 ---
 
