@@ -28,103 +28,124 @@ Aegis-RTO is an **autonomous, closed-loop risk engine**. When fraud tactics shif
 
 ---
 
-## 🏛️ Closed-Loop Autonomous Architecture — Fully Expanded
+## 🏛️ How Aegis-RTO Works (The Closed Loop)
 
-> 💡 **Interactive version**: Run the dashboard locally and open the **Overview** tab for a zoomable, animated, click-to-expand version of this diagram with plain-English breakdowns of every stage.
-
-```mermaid
-flowchart TD
-    classDef pipeline  fill:#eef2ff,stroke:#6366f1,stroke-width:2px,color:#1e1b4b
-    classDef ensemble  fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#064e3b
-    classDef routing   fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e
-    classDef outcome   fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a
-    classDef sentinel  fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0c4a6e
-    classDef sentDrift fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#3b0764
-    classDef residual  fill:#fffbeb,stroke:#d97706,stroke-width:2px,color:#78350f
-    classDef substep   fill:#ffffff,stroke:#fbbf24,stroke-width:1px,color:#1c1917
-    classDef agenda    fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
-    classDef agent     fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#3b0764
-    classDef gate      fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#064e3b
-    classDef security  fill:#eef2ff,stroke:#4f46e5,stroke-width:2px,color:#1e1b4b
-    classDef promoted  fill:#065f46,stroke:#34d399,stroke-width:2px,color:#ecfdf5
-
-    N1["⚡ 1. NEW ORDER STREAM — Live Checkout Transaction Telemetry — 17 Signals, sub-10ms SLA"]:::pipeline
-    N2["🛡️ 2. FROZEN SERVING ENSEMBLE — LOCKED PRODUCTION — Validated Python AST Rule Weights"]:::ensemble
-    N3["3. 3-WAY DECISION ROUTER — AUTO_APPROVE T<0.35 | MANUAL_REVIEW | AUTO_BLOCK T>=0.70"]:::routing
-    N4["🕐 4. OUTCOME LOGGED and MATURATION — 5-DAY WINDOW — Physical Delivery vs RTO Labels"]:::outcome
-
-    subgraph TRIGGERS["5. AUTONOMOUS ADAPTATION TRIGGER LAYER — CONTINUOUS SENTINELS"]
-        direction TB
-        T5A["📊 SPIKE MONITOR — Sliding Binomial Z-Score — Z > 2.50 sigma Anomaly Alert"]:::sentinel
-        T5B["〰️ DRIFT DETECTOR — Population Stability Index — PSI > 0.25 Distribution Shift"]:::sentDrift
-        T5C["🔍 RESIDUAL MINER — False-Negative Cluster Isolation — Chi-Square p < 0.01"]:::residual
-        R1["1. Mature Orders 5d+ — Ground Truth"]:::substep
-        R2["2. Miss Clustering — HDBSCAN"]:::substep
-        R3["3. Significance Guard — Fisher Exact Test p < 0.01"]:::substep
-        R4["4. Cooldown Check — 3 Rounds"]:::substep
-        R5["⭐ 5. DEFENSE AGENDA — Targeted Brief for Generator"]:::agenda
-        T5C --> R1 --> R2 --> R3 --> R4 --> R5
-    end
-
-    subgraph AGENTS["6. CORE MULTI-AGENT EVOLUTION LOOP and SAFETY VERIFICATION GATES"]
-        direction TB
-        A1["🧠 1. GENERATOR AGENT — LLM SYNTHESIS — Synthesizes candidate Python AST boolean rules"]:::agent
-        A2["⚙️ 2. EVALUATOR AGENT — SANDBOX EXEC — Runs AST in sandbox, computes TP/FP/net savings"]:::agent
-        A3["🔄 3. REFLECTOR AGENT — CAUSAL DIAGNOSIS — Diagnoses false positives, tightens boundaries"]:::agent
-        A4["⚖️ 4. SELECTOR and PRUNER — PARETO FRONTIER — Prunes collinear rules, builds ensemble"]:::agent
-        G1["✔️ 5. GATE 1: PRE-DRIFT REGRESSION — SAFETY GATE — Enforces less-than-5% regression on Days 0-55"]:::gate
-        G2["🗄️ 6. GATE 2: HELD-OUT VALIDATION — SAFETY GATE — Single-touch eval on Days 56-75 split"]:::gate
-        G3["🛡️ 7. DECOY GUARD and AST AUDIT — SECURITY AUDIT — Honeypot perturbation, zero decoy leakage"]:::security
-
-        A1 -->|"candidate AST"| A2
-        A2 -->|"valid AST"| A3
-        A3 -->|"diagnosed candidate"| A4
-        A4 -->|"pareto ensemble candidate"| G1
-        G1 -->|"regression < 5% PASS"| G2
-        G2 -->|"validation split PASS"| G3
-        G3 -->|"all gates verified PASS"| N7
-        A2 -->|"FAIL — syntax error, fast fail"| A1
-        G1 -->|"FAIL — regression > 5%, prune and re-mutate"| A1
-    end
-
-    N7["✨ 8. PROMOTED CHAMPION RULE — PROMOTED LIVE — Atomic snapshot update, zero downtime"]:::promoted
-
-    N1 -->|"stream"| N2
-    N2 -->|"score less than 10ms"| N3
-    N3 -->|"log actions"| N4
-    N4 -->|"mature courier ground truth"| TRIGGERS
-    T5A -->|"spike agenda"| A1
-    T5B -->|"drift agenda"| A1
-    R5  -->|"feeds defense agenda into Generator"| A1
-    N7  -->|"if promoted — atomic snapshot update to Node 2"| N2
+```
+   ┌─────────────┐       stream       ┌──────────────────┐       score        ┌──────────────────┐
+   │ 1. New      │ ─────────────────> │ 2. Frozen Serving│ ─────────────────> │ 3. 3-Way         │
+   │    Order    │                    │    Ensemble      │                    │    Router        │
+   └─────────────┘                    └──────────────────┘                    └────────┬─────────┘
+                                                ▲                                      │
+                                                │ (if promoted: atomic snapshot update)│ action
+                                                │                                      ▼
+   ┌─────────────┐       agenda       ┌─────────┴────────┐      mature        ┌──────────────────┐
+   │ 6. Multi-   │ <───────────────── │ 5. Autonomous    │ <───────────────── │ 4. Outcomes      │
+   │    Agent    │                    │    Triggers      │                    │    Logged        │
+   │    Evolution│                    │ (Spike/Drift/    │                    │ (5-Day Maturation│
+   │    Loop     │                    │  Residual Miner) │                    │  Ground Truth)   │
+   └─────────────┘                    └──────────────────┘                    └──────────────────┘
 ```
 
-### Stage-by-Stage Reference
+---
 
-| # | Stage | Badge | What It Does |
-|:---:|---|---|---|
-| **1** | New Order Stream | `PIPELINE` | Live checkout telemetry scored in &lt;10ms against serving snapshot |
-| **2** | Frozen Serving Ensemble | `LOCKED PRODUCTION` | Immutable Python AST rule weights — zero LLM dependency at inference |
-| **3** | 3-Way Decision Router | `ZERO CHERRY-PICKING` | Routes every order: Auto-Approve / Manual Review / Auto-Block |
-| **4** | Outcome Logged & Maturation | `5-DAY WINDOW` | Waits for physical courier truth before labelling decisions |
-| **5** | Autonomous Trigger Layer | `CONTINUOUS SENTINELS` | Spike Monitor + Drift Detector + Residual Miner fire agendas |
-| **6** | Multi-Agent Evolution Loop | `LLM SYNTHESIS` | Generator → Evaluator → Reflector → Selector/Pruner |
-| **7** | Safety Verification Gates | `SAFETY GATE` | Gate 1 Regression → Gate 2 Held-Out → Decoy Guard AST Audit |
-| **8** | Promoted Champion Rule | `PROMOTED LIVE` | Atomic snapshot update back into Node 2 — zero downtime |
+## 🚀 How It All Works — A Plain-English Walkthrough
 
-1. **1. New Order Stream**: Live checkouts are evaluated in sub-10ms against the serving rule snapshot.
-2. **2. Frozen Serving Ensemble**: Rules execute inside a secure, sandboxed Abstract Syntax Tree (AST) evaluator without `eval()`, `exec()`, or file access.
-3. **3. 3-Way Decision Routing**:
-   * **Auto-Approve ($\text{Risk} < 0.35$)**: 96.06% of orders flow friction-free to fulfillment.
-   * **Auto-Block ($\text{Risk} \ge 0.70$)**: High-confidence fraud is blocked automatically.
-   * **Human Review ($0.35 \le \text{Risk} < 0.70$)**: Ambiguous orders are isolated for analyst triage.
-4. **4. Outcomes Logged (5-Day Maturation)**: Delivery statuses (Delivered vs RTO) mature over 5 days to prevent in-flight orders from creating false ground truth.
-5. **5. Autonomous Triggers**:
-   * **Spike Monitor**: Real-time binomial Z-score ($Z > 3.0\sigma$) & CUSUM detector catching coordinated fraud surges with 0 label lag.
-   * **Concept Drift Detector**: Population Stability Index ($\text{PSI} > 0.25$) detecting shifts in order value or pincode distributions.
-   * **Residual Miner**: Scans mature false negatives, clusters misses, filters by statistical significance ($\chi^2 < 0.05$), enforces a 3-round cooldown, and creates targeted agendas.
-6. **6. Multi-Agent Evolution & Verification Gates**:
-   * `Generator Agent` $\to$ `Evaluator Agent` $\to$ `Reflector Agent` (diagnoses false positives and loops back feedback) $\to$ `Selector Agent` (prunes redundancies) $\to$ `Gate 1 (Regression Check)` $\to$ `Gate 2 (Single-Touch Held-Out Test)` $\to$ `Decoy Guard` $\to$ **Promoted champion rules update Node 2 atomically**.
+> **Follow a single order from checkout to decision — and see how the system learns and improves itself over time.**
+
+### Step 1 — A Customer Places a COD Order
+
+Imagine Rahul in Pune places a Cash-on-Delivery order for a ₹1,200 smartwatch at 2 AM using a new phone number, a freshly created account, and a pincode that has historically seen many returns.
+
+The moment he hits **Place Order**, Aegis-RTO kicks in.
+
+---
+
+### Step 2 — The Frozen Serving Ensemble Scores It Instantly
+
+Aegis reads 17 signals from that order — things like the hour of day, whether the account is new, the pincode's historical return rate, the device type, and the order value.
+
+It then runs those signals through a locked set of **Python rules** that were validated before deployment. These rules are frozen — they don't call any AI model at runtime. The whole scoring happens in **under 10 milliseconds**.
+
+Think of it like a trained security guard at the door who already knows the checklist by heart and doesn't need to call anyone for guidance.
+
+---
+
+### Step 3 — The 3-Way Router Makes a Decision
+
+Based on the score, one of three things happens:
+
+| Score | Action | What it means |
+|---|---|---|
+| Low risk | ✅ **Auto-Approve** | Order goes straight to fulfillment — no friction for the customer |
+| High risk | 🚫 **Auto-Block** | High-confidence fraud, order is blocked automatically |
+| Uncertain | 🟡 **Manual Review** | Sent to a human analyst for a quick judgment call |
+
+In Rahul's case — 2 AM, new account, risky pincode — the system scores him medium-high and sends him to **Manual Review**.
+
+---
+
+### Step 4 — The Outcome Is Logged and Waits to Mature
+
+Whatever decision was made gets logged. But Aegis does not immediately use that decision as training data.
+
+Why? Because the courier still needs to physically deliver (or return) the package. Aegis waits **5 days** for the real outcome — was the order delivered or returned? — before using it as ground truth.
+
+This prevents the system from learning from incomplete or misleading information.
+
+---
+
+### Step 5 — The Sentinels Watch for Changes in Fraud Patterns
+
+While all of this is happening in real time, three background watchers are always running:
+
+**📊 Spike Monitor** — If 50 orders suddenly pour in from the same pincode within one hour (far above normal), this raises an alert. It catches coordinated fraud surges early, even before any orders are actually returned.
+
+**〰️ Drift Detector** — If the typical order values or geographic spread of orders starts shifting compared to last month, this fires. It means the nature of the incoming orders is changing — possibly because fraudsters have moved to a new city or tactic.
+
+**🔍 Residual Miner** — After 5 days, this scans all orders that slipped through (the system approved them but they turned out to be fraudulent returns). It groups them by shared characteristics and looks for a pattern. For example: *"All the missed frauds came from Tier-3 cities, placed between midnight and 3 AM, with order values above ₹900."*
+
+When any sentinel spots a real, statistically significant pattern, it writes a **Defense Agenda** — a plain brief describing the fraud behaviour — and passes it to the evolution engine.
+
+---
+
+### Step 6 — The Multi-Agent Loop Writes and Verifies a New Rule
+
+This is where Aegis teaches itself. Four AI agents work in sequence:
+
+**🧠 Generator** reads the Defense Agenda and writes a new Python rule. For example:
+
+```python
+# Block late-night high-value orders from brand-new accounts in high-RTO pincodes
+order.hour >= 23 and order.account_age_days < 7 and order.pincode_rto_rate > 0.30 and order.item_value > 900
+```
+
+**⚙️ Evaluator** runs that rule safely in a sandboxed environment against historical orders and measures: how many real frauds does it catch vs. how many genuine customers does it wrongly block?
+
+**🔄 Reflector** reviews those results. If the rule is catching fraud well but also blocking too many legitimate orders, it diagnoses why and tells the Generator to tighten the rule — for example, raise the value threshold from ₹900 to ₹1,100.
+
+**⚖️ Selector** checks whether this new rule actually adds new value or just overlaps with something the system already catches.
+
+---
+
+### Step 7 — Three Safety Gates Before Anything Goes Live
+
+Even if the new rule looks excellent in the lab, it must pass three independent checks before it can be deployed:
+
+**Gate 1 — Regression Check:** The new rule is tested on 55 days of historical data. If it makes the overall system worse by more than 5%, it is rejected and sent back for revision. This protects existing performance.
+
+**Gate 2 — Held-Out Validation:** The rule is run once — and only once — on a completely separate set of orders that were locked away from the very beginning. This is the final exam with no second chances. It proves the rule works on orders it has never seen.
+
+**Gate 3 — Decoy Guard:** The rule is checked to make sure it is not accidentally using information that would only be available after the outcome (circular reasoning) or any fake test signals planted to catch cheating.
+
+---
+
+### Step 8 — The Champion Rule Goes Live. Instantly. No Downtime.
+
+If the rule passes all three gates, it is promoted. The Frozen Serving Ensemble (Step 2) is updated atomically — like swapping one file for another — with the new rule now included.
+
+The very next order that arrives is scored using the improved ruleset. No server restart. No redeployment. No data scientist needed.
+
+Rahul's fraud pattern has been captured. Anyone who tries the same trick next time gets blocked automatically.
 
 ---
 
