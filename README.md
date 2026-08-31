@@ -97,7 +97,7 @@ Three background monitors run continuously against the maturing outcome stream:
 
 **〰️ Drift Detector** — Monitors the **Population Stability Index (PSI)** of incoming order features (value distribution, pincode spread, device mix). A significant PSI shift means the population of orders has changed — often because fraudsters have shifted tactics or geography — and the existing rules may no longer be aligned.
 
-**🔍 Residual Miner** — After maturation, it scans all false negatives (orders the system approved that turned out to be fraudulent returns) and performs **statistical subgroup discovery** across behavioral feature dimensions. It isolates dense cohorts of unflagged fraud patterns without multiple-testing noise. Each cluster that passes a **Chi-Square significance test ($p < 0.05$)** and a **3-round cooldown guard** (to avoid proposing the same fix repeatedly) generates a **Defense Agenda** — a structured brief describing the shared feature profile of the cluster — which is handed to the evolution engine.
+**🔍 Residual Miner** — After maturation, it scans all false negatives (orders the system approved that turned out to be fraudulent returns) and runs **HDBSCAN clustering** on their feature vectors. HDBSCAN groups similar missed-fraud orders into dense clusters without requiring a fixed number of groups — so it naturally finds pockets of similar fraud behaviour. Each cluster that passes a **Fisher's Exact Test significance check** and a **3-round cooldown guard** (to avoid proposing the same fix repeatedly) generates a **Defense Agenda** — a structured brief that describes the shared feature profile of the cluster — which is handed to the evolution engine.
 
 ---
 
@@ -139,13 +139,13 @@ Aegis-RTO optimizes for **Merchant Net Profit**, not vanity metric accuracy:
 $$\text{Net Value} = (\text{True Positives} \times ₹250\text{ Shipping Loss Avoided}) - \sum (\text{False Positive Order Value} \times 15\%\text{ Profit Margin Lost})$$
 
 ### The 22.26% Break-Even Precision Hurdle:
-At an average order value (AOV) of ₹1,123.36:
-* Saving 1 RTO prevents: $+₹250$
-* Insulting 1 genuine customer loses: $₹1,123.36 \times 15\% = -₹168.50$
+Based on the measured mean false-positive order value of **₹477.31** across checkouts:
+* Saving 1 RTO prevents: $+₹250.00$ in logistics and return fees
+* Insulting 1 genuine customer loses: $₹477.31 \times 15\%\text{ margin} = -₹71.60$
 * **Minimum viable precision required**:
-  $$\text{Break-Even Precision} = \frac{₹168.50}{₹250 + ₹168.50} = 22.26\%$$
+  $$\text{Break-Even Precision} = \frac{₹71.60}{₹250.00 + ₹71.60} = \frac{71.60}{321.60} = 22.26\%$$
 
-Any fraud system operating below 22.26% precision destroys merchant wealth. Aegis-RTO operates at **37.25%–42.86% precision**, ensuring every automated decision delivers positive net cash flow.
+Any fraud system operating below 22.26% precision destroys merchant wealth. Aegis-RTO operates at **37.25% precision** on the locked held-out test split, ensuring every automated block delivers positive net cash flow.
 
 ---
 
