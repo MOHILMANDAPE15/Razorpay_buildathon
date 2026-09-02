@@ -297,7 +297,7 @@ export default function ArchitectureDiagram() {
                 className="shadow-sm group-hover:scale-105 transition"
               />
               <text x="0" y="4" textAnchor="middle" className="text-[10px] fill-rose-700 font-mono font-bold">
-                ✕ syntax error → Reflector mutates ⓘ
+                ✕ syntax fail → dropped; Gen re-runs ⓘ
               </text>
             </g>
 

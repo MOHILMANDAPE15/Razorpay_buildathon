@@ -356,17 +356,17 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   },
 
   loop_syntax_fail: {
-    term: 'Evaluator Fast-Fail Loop',
+    term: 'Evaluator Fast-Fail Drop Loop',
     category: 'gate',
-    shortDesc: 'Immediate syntax and runtime error retry path.',
-    simpleExplanation: 'If an LLM writes Python code with a syntax error or runtime exception, Evaluator catches it immediately and sends the error traceback back to Generator to fix the syntax.',
-    fullDesc: 'Sandboxed Python parser catches syntax errors, type mismatches, and execution timeouts immediately, feeding the raw traceback into Generator for zero-cost rapid self-repair.',
+    shortDesc: 'Syntax/runtime failures cause the candidate to be dropped; Generator synthesizes fresh candidates in the next round.',
+    simpleExplanation: 'If the Evaluator receives a candidate with a syntax error or runtime exception (is_valid=False), it does NOT call the Reflector — the candidate is simply dropped from the population. The Generator handles its own syntax repair internally via repair_rule_code during generation, and fresh candidates are proposed in the next round.',
+    fullDesc: 'The Reflector only runs on candidates where is_valid=True. A candidate that fails sandboxed execution is marked invalid and removed. The Generator uses an internal repair_rule_code fallback to fix syntax errors at generation time before a candidate is ever sent to the Evaluator.',
     whyItMatters: 'Ensures 100% syntactically valid executable code before any computationally heavy evaluation or gate testing begins.',
     inputsAndOutputs: {
-      inputs: 'Python syntax / execution traceback.',
-      outputs: 'Immediate self-repair prompt for Generator.',
+      inputs: 'Python syntax / execution traceback from Evaluator sandbox.',
+      outputs: 'Candidate dropped from population; Generator proposes fresh candidates next round.',
     },
-    metricOrFormula: 'Immediate AST Error Intercept (< 50ms)',
+    metricOrFormula: 'Immediate AST Error Intercept (< 50ms) | Reflector NOT invoked on is_valid=False',
   },
 
   loop_regression_fail: {
