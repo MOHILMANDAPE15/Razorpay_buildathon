@@ -255,16 +255,16 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   reflector: {
     term: '3. Reflector Agent',
     category: 'agent',
-    shortDesc: 'Analyzes false positives and diagnoses specific feature failure modes.',
-    simpleExplanation: 'The diagnostic critic. When a candidate rule blocks legitimate customers, Reflector diagnoses why and tells Generator how to tighten the rule.',
-    fullDesc: 'Performs causal error attribution on misclassified orders, recommending targeted tightening (e.g. adding account age constraints or category filters) instead of discarding promising rules.',
-    whyItMatters: 'Turns failed rule attempts into iterative stepping stones, evolving high-precision rules through guided mutation.',
+    shortDesc: 'Diagnoses rule failures and directly synthesizes a mutated child rule via its own LLM call.',
+    simpleExplanation: 'The diagnostic mutator. When a candidate rule causes false alarms or fails execution, the Reflector diagnoses exactly why — then synthesizes a corrected mutated child rule itself using its own LLM call. The child is immediately sent back to the Evaluator for re-scoring.',
+    fullDesc: 'Performs causal error attribution on misclassified orders, then calls its own LLM to produce an evolved child hypothesis with tighter boundaries. The parent rule failure diagnosis is also persisted to the Notepad, where it informs the Generator in the next evolution round.',
+    whyItMatters: 'Turns failed rule attempts into iterative stepping stones, evolving high-precision rules through guided self-mutation — without needing a full extra Generator round.',
     inputsAndOutputs: {
-      inputs: 'False positive order feature details and rule misclassification logs.',
-      outputs: 'Actionable reflection critiques and tightening recommendations.',
+      inputs: 'False positive order feature details, rule misclassification logs, and parent rule code.',
+      outputs: 'Mutated child RuleHypothesis (sent to Evaluator for re-scoring) + failure diagnosis stored in Notepad.',
     },
-    metricOrFormula: 'Causal Attribution: Feature importance differential on false positive cohorts',
-    realWorldExample: 'Diagnosing that legitimate prepaid buyers were caught by a loose threshold; recommending adding `df["payment_mode"] == "COD"`.',
+    metricOrFormula: 'Causal Attribution: Feature importance differential on false positive cohorts | Child re-evaluated by Evaluator in same round',
+    realWorldExample: 'Diagnosing that legitimate prepaid buyers were caught by a loose threshold; Reflector directly writes and returns a tightened child rule adding `df["payment_mode"] == "COD"` constraint.',
   },
 
   selector: {
@@ -370,17 +370,17 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   },
 
   loop_regression_fail: {
-    term: 'Regression Gate Retry Loop',
+    term: 'Regression Gate Pruning Loop',
     category: 'gate',
-    shortDesc: 'Historical regression prune and re-mutation loop.',
-    simpleExplanation: 'If a candidate rule performs well on new fraud but hurts old clean traffic by more than 5%, Gate 1 rejects it and commands Generator to re-mutate with tighter constraints.',
-    fullDesc: 'When candidate ensemble regression on pre-drift data exceeds 5%, the candidate is pruned and sent back to Generator with an explicit directive to tighten false-positive boundaries.',
-    whyItMatters: 'Guarantees the system never degrades pre-existing merchant margins while chasing new fraud.',
+    shortDesc: 'Gate 1 failures are pruned from the population; failure digest feeds the next-round Generator via Notepad.',
+    simpleExplanation: 'If a candidate rule performs well on new fraud but hurts old clean traffic by more than 5%, Gate 1 rejects it and marks it as pruned. Critically, it does NOT immediately re-run the Generator in the same round — the failure reason is instead stored in the Notepad and informs the Generator\'s next evolution round.',
+    fullDesc: 'When a candidate ensemble regresses on pre-drift data by more than 5%, the candidate is marked as pruned and removed from the active top-K population. The regression failure reason is persisted via the Notepad history summary, which is fed as context into the Generator at the start of the next evolution round — enabling iterative boundary tightening across rounds.',
+    whyItMatters: 'Guarantees the system never degrades pre-existing merchant margins while chasing new fraud — and uses failure signals as structured learning for future generation rounds.',
     inputsAndOutputs: {
       inputs: 'Pre-drift regression logs (> 5% drop in net savings).',
-      outputs: 'Boundary-tightening mutation agenda for Generator.',
+      outputs: 'Candidate marked pruned; failure digest written to Notepad for next-round Generator context.',
     },
-    metricOrFormula: 'Trigger: Regression Delta < -5.0%',
+    metricOrFormula: 'Trigger: Regression Delta < -5.0% | Feedback: via Notepad history summary in next round',
   },
 
   loop_promotion: {

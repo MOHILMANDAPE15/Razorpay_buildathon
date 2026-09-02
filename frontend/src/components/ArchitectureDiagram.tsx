@@ -297,7 +297,7 @@ export default function ArchitectureDiagram() {
                 className="shadow-sm group-hover:scale-105 transition"
               />
               <text x="0" y="4" textAnchor="middle" className="text-[10px] fill-rose-700 font-mono font-bold">
-                ✕ if syntax error / fast fail ⓘ
+                ✕ syntax error → Reflector mutates ⓘ
               </text>
             </g>
 
@@ -346,7 +346,7 @@ export default function ArchitectureDiagram() {
                 ✕ if regression &gt; 5%
               </text>
               <text x="0" y="12" textAnchor="middle" className="text-[9px] fill-slate-500 font-mono">
-                prune &amp; re-mutate ⓘ
+                prune; digest → next-round Gen ⓘ
               </text>
             </g>
 
@@ -729,8 +729,8 @@ export default function ArchitectureDiagram() {
                       <span className="text-xs font-black text-purple-950 font-mono uppercase">3. Reflector Agent</span>
                       <span className="text-[9px] font-mono px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold">CAUSAL DIAGNOSIS</span>
                     </div>
-                    <p className="text-[11.5px] text-slate-700 font-medium leading-tight">Diagnoses false positives &amp; prescribes targeted rule boundary tightening</p>
-                    <span className="text-[10px] text-purple-600 font-mono font-semibold block">Self-Reflective Critique · Error Attribution</span>
+                    <p className="text-[11.5px] text-slate-700 font-medium leading-tight">Diagnoses false positives &amp; directly synthesizes a mutated child rule via its own LLM call</p>
+                    <span className="text-[10px] text-purple-600 font-mono font-semibold block">Self-Reflective Mutation · Failure digest persists to Notepad</span>
                   </div>
                   <div className="w-11 h-11 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
                     <RotateCcw className="w-6 h-6" />
@@ -741,8 +741,8 @@ export default function ArchitectureDiagram() {
 
             {/* Connecting line 6C -> 6D */}
             <path d="M 750 1740 L 750 1785" stroke="#7c3aed" strokeWidth="2.5" fill="none" markerEnd="url(#v-arr-purple)" />
-            <rect x="686" y="1753" width="128" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
-            <text x="750" y="1767" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">diagnosed candidate</text>
+            <rect x="660" y="1753" width="180" height="20" rx="4" fill="#faf5ff" stroke="#d8b4fe" strokeWidth="1.5" />
+            <text x="750" y="1767" textAnchor="middle" className="text-[9.5px] fill-purple-800 font-mono font-bold">mutated child → Evaluator (re-scored)</text>
             {flowLights && (
               <circle r="4" fill="#a855f7" filter="url(#glow-light)">
                 <animateMotion path="M 750 1740 L 750 1785" dur="1s" repeatCount="indefinite" />
