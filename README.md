@@ -4,11 +4,21 @@
 > 
 > *A production-grade, self-evolving risk engine that autonomously discovers, validates, and refines executable Python fraud defense rules to protect Indian e-commerce merchants from Return-to-Origin (RTO) and Cash-on-Delivery (COD) fraud.*
 
+[![Live App](https://img.shields.io/badge/Live%20Demo-Vercel%20Deployed-emerald?style=for-the-badge&logo=vercel)](https://razorpay-buildathon-ashy.vercel.app/)
+[![Pitch Video](https://img.shields.io/badge/Pitch%20Video-5--Min%20Demo-red?style=for-the-badge&logo=google-drive)](https://drive.google.com/file/d/1m-MJUAom17GV1eik1olnBvtw4YXlBGY0/view)
 [![Tests](https://img.shields.io/badge/Tests-65%2F65%20Passing-emerald?style=for-the-badge&logo=pytest)](file:///c:/Users/Dell/Razorpay_buildathon/backend/tests)
 [![Track](https://img.shields.io/badge/Track%202-AI%20Risk%20Manager-indigo?style=for-the-badge)](https://razorpay.com/buildathon)
-[![Policy](https://img.shields.io/badge/Policy-100%25%20Defense--Only-blue?style=for-the-badge)](file:///c:/Users/Dell/Razorpay_buildathon/backend/app/engine/defense_audit.py)
 [![Inference](https://img.shields.io/badge/Inference-%3C10ms%20Vectorized-purple?style=for-the-badge)](file:///c:/Users/Dell/Razorpay_buildathon/backend/app/core/sandbox.py)
-[![Deploy](https://img.shields.io/badge/Deploy-Vercel%20%2B%20Docker-black?style=for-the-badge&logo=vercel)](https://vercel.com)
+
+---
+
+### 🔗 Project Quick Links
+
+| Resource | Link | Description |
+|---|---|---|
+| 🌐 **Live Deployed Web App** | **[razorpay-buildathon-ashy.vercel.app](https://razorpay-buildathon-ashy.vercel.app/)** | Interactive production dashboard, real-time spike simulator & rule lineage graph |
+| 🎬 **5-Minute Pitch Video** | **[Google Drive Video Demo](https://drive.google.com/file/d/1m-MJUAom17GV1eik1olnBvtw4YXlBGY0/view)** | Full video walkthrough covering problem statement, architecture & live UI |
+| 💻 **GitHub Repository** | **[MOHILMANDAPE15/Razorpay_buildathon](https://github.com/MOHILMANDAPE15/Razorpay_buildathon)** | Open-source code, test suites, and empirical ablation notebooks |
 
 ---
 
@@ -109,7 +119,7 @@ Four AI agents work in sequence:
 
 **⚙️ Evaluator** executes the rule in an **isolated sandbox** (no database writes, no network calls, CPU time-limited) against the full historical dataset and computes: how many actual frauds does this catch, how many genuine orders does it wrongly flag, and what is the net INR savings after accounting for the cost of false positives?
 
-**🔄 Reflector** reviews the Evaluator's output and performs **causal diagnosis** — if the rule has too many false positives, it identifies which feature boundary is responsible and feeds targeted correction instructions back to the Generator for the next iteration.
+**🔄 Reflector** reviews the Evaluator's output, performs **causal error diagnosis**, and directly synthesizes a mutated child rule using its own LLM call with tightened boundary conditions. The mutated rule is immediately passed back to the Evaluator for re-scoring in the same round, while its failure diagnosis is recorded to the Notepad to guide the Generator in the next generation round.
 
 **⚖️ Selector & Pruner** applies **greedy forward selection** to decide whether the new rule earns a place in the ensemble. It checks for **collinearity** — if the new rule fires on almost the same orders as an existing rule, it adds no marginal value and is pruned. Only rules that improve the **Pareto frontier** of precision vs. recall vs. net savings get added to the candidate ensemble.
 
